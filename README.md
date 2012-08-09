@@ -1,1 +1,1 @@
-A CSS rule analyzer that reports redundancy.
+A CSS redundancy analyzer that analyzes redundancy.
