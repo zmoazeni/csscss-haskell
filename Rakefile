@@ -14,6 +14,11 @@ desc "Compile srcs"
 task :compile => files.pathmap("%{^src/bin}X.o")
 task :default => :compile
 
+desc "Run all the specs"
+task :spec do
+  sh "runghc -isrc -ispec spec/Suite.hs"
+end
+
 namespace :clean do
   desc "Clean the compiled objects"
   task :src do
