@@ -4,6 +4,7 @@ module Main where
 import System.Environment (getArgs)
 import Text.CSS.Parse
 import Data.Text (Text, pack)
+import Rulesets
 
 main :: IO ()
 main = do
@@ -18,15 +19,6 @@ main = do
                                     
         displayRulesets rawRulesets = do let rulesets = map buildRuleset rawRulesets
                                          print $ take 3 rulesets
-        buildRulesets = map buildRuleset
-        buildRuleset (selector, rawRules) = Ruleset selector (buildRules rawRules)
-        buildRules = map (uncurry Rule)
-        
         printError = putStrLn "Need a file to parse"
         printParseError error = putStrLn $ "Error parsing css: " ++ error
 
-data Rule = Rule {property :: Text, value :: Text}
-            deriving (Show)
-                     
-data Ruleset = Ruleset {selector :: Text, rules :: [Rule]}
-             deriving (Show)
