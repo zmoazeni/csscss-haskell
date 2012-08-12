@@ -5,10 +5,10 @@ import Data.List
 
 type RawRule = (Text, Text)
 type RawRuleset = (Text, [RawRule])
-data Rule = Rule {property :: Text, value :: Text}
+data Rule = Rule {getProperty :: Text, getValue :: Text}
             deriving (Show, Eq, Ord)
                      
-data Ruleset = Ruleset {selector :: Text, rules :: [Rule]}
+data Ruleset = Ruleset {getSelector :: Text, getRules :: [Rule]}
              deriving (Show, Eq, Ord)
                       
 buildRulesets :: [RawRuleset] -> [Ruleset]
