@@ -68,16 +68,25 @@ symbol s = lexeme $ stringCI s
 between :: Parser a -> Parser b -> Parser c -> Parser c
 between open close p = do
   open
+  skipSpace
   x <- p
+  skipSpace
   close
   return x
 
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
+singleQuotes :: Parser a -> Parser a
+singleQuotes = between (symbol "'") (symbol "'")
+
+doubleQuotes :: Parser a -> Parser a
+doubleQuotes = between (symbol "\"") (symbol "\"")
+
 comma :: Parser ()
 comma = symbol "," >> return ()
 
+literal :: Value v => T.Text -> v -> Parser v
 literal s result = symbol s *> pure result
 
 --
@@ -149,17 +158,16 @@ bgImage = bgImageUrl <|> none <|> inherit
         inherit = literal "inherit" InheritImage
 
 bgImageUrl :: Parser Image
-bgImageUrl = do stringCI "url"
-                skipSpace
-                string "("
-                skipSpace
-                skipOptionalQuote
-                url <- takeTill (inClass "\"' ")
-                skipOptionalQuote
-                skipSpace
-                string ")"
-                return $ Url (unpack url)
-  where skipOptionalQuote = Just <$> try (skip (inClass "\"'")) <|> return Nothing
+bgImageUrl = do
+  symbol "url"
+  url <- (singleQuoteUrl <|> doubleQuoteUrl <|> noQuoteUrl)
+  return $ Url (unpack url)
+
+  where singleQuoteUrl = parens $ singleQuotes innerUrl
+        doubleQuoteUrl = parens $ doubleQuotes innerUrl
+        noQuoteUrl     = parens innerUrl
+        innerUrl       = takeWhile isUrl
+        isUrl c        = isLetter c || isNumber c || inClass ":/?&." c
 
 --
 -- Parsing Repeat
