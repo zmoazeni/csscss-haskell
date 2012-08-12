@@ -111,7 +111,10 @@ bgImage = do stringCI "url"
              skipSpace
              string "("
              skipSpace
-             url <- takeTill isSpace
+             skipOptionalQuote
+             url <- takeTill (inClass "\"' ")
+             skipOptionalQuote
              skipSpace
              string ")"
              return $ Url (unpack url)
+  where skipOptionalQuote = Just <$> try (skip (inClass "\"'")) <|> return Nothing
