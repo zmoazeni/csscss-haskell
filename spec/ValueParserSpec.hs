@@ -10,8 +10,10 @@ import Data.Maybe
 
 -- trace (show $ parseBackground "black") False
 
-parseColor = fromJust . getColor . fromJust . parseBackground
-parseImage = fromJust . getImage . fromJust . parseBackground
+parseSingle f = fromJust . f . fromJust . parseBackground
+parseColor  = parseSingle getColor
+parseImage  = parseSingle getImage
+parseRepeat = parseSingle getRepeat
 
 main = hspec $ do
   describe "background color" $ do
@@ -48,4 +50,20 @@ main = hspec $ do
 
     it "parses none" $ do
       parseImage "none" == NoneImage
+
+  describe "background repeat" $ do
+    it "parses repeat" $ do
+      parseRepeat "repeat" == Repeat
+
+    it "parses repeat-x" $ do
+      parseRepeat "repeat-x" == RepeatX
+
+    it "parses repeat-y" $ do
+      parseRepeat "repeat-y" == RepeatY
+
+    it "parses no-repeat" $ do
+      parseRepeat "no-repeat" == NoRepeat
+
+    it "parses inherit" $ do
+      parseRepeat "black none inherit" == InheritRepeat
 

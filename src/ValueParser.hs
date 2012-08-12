@@ -13,7 +13,9 @@ import Control.Applicative
 import Prelude hiding (takeWhile)
 import Data.Char
 
-data Background = Background {getColor :: Maybe Color, getImage :: Maybe Image}
+data Background = Background {getColor  :: Maybe Color,
+                              getImage  :: Maybe Image,
+                              getRepeat :: Maybe Repeat}
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -26,9 +28,13 @@ data Image = Url {getUrl :: String } |
              InheritImage
            deriving (Eq, Show, Ord)
 
+data Repeat = Repeat | RepeatX | RepeatY | NoRepeat | InheritRepeat
+            deriving (Eq, Show, Ord)
+
 class Value a
 instance Value Color
 instance Value Image
+instance Value Repeat
 
 parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
@@ -37,7 +43,9 @@ bg :: Parser Background
 bg = do color <- Just <$> try bgColor <|> return Nothing
         skipSpace
         image <- Just <$> try bgImage <|> return Nothing
-        return $ Background color image
+        skipSpace
+        repeat <- Just <$> try bgRepeat <|> return Nothing
+        return $ Background color image repeat
 
 --
 -- Parsing Background Colors
@@ -121,3 +129,14 @@ bgImageUrl = do stringCI "url"
                 string ")"
                 return $ Url (unpack url)
   where skipOptionalQuote = Just <$> try (skip (inClass "\"'")) <|> return Nothing
+
+--
+-- Parsing Repeat
+--
+bgRepeat :: Parser Repeat
+bgRepeat = (repeat <* endOfInput) <|> repeatX <|> repeatY <|> norepeat <|> inherit
+  where repeat   = literal "repeat"    Repeat
+        repeatX  = literal "repeat-x"  RepeatX
+        repeatY  = literal "repeat-y"  RepeatY
+        norepeat = literal "no-repeat" NoRepeat
+        inherit  = literal "inherit"   InheritRepeat
