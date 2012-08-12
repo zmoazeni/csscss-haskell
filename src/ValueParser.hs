@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- Parser is built from http://www.w3.org/TR/CSS/ as a reference
-
 module ValueParser where
 
 import Data.Attoparsec.Text
@@ -12,6 +10,7 @@ import qualified Data.Text as T (length)
 import Control.Applicative
 import Prelude hiding (takeWhile)
 import Data.Char
+import Data.Foldable
 
 data Background = Background {getColor :: Maybe Color, getImage :: Maybe Image}
 
@@ -26,27 +25,16 @@ data Image = Url {getUrl :: String } |
              InheritImage
            deriving (Eq, Show, Ord)
 
-class Value a
-instance Value Color
-instance Value Image
-
 parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
 
 bg :: Parser Background
 bg = do color <- Just <$> try bgColor <|> return Nothing
-        skipSpace
         image <- Just <$> try bgImage <|> return Nothing
         return $ Background color image
 
---
--- Parsing Background Colors
---
-literal s result = stringCI s *> pure result
-
 bgColor :: Parser Color
-bgColor = hexColor <|> rgbColor <|> bgColorKeyword <|> inherit
-  where inherit = literal "inherit" InheritColor
+bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
 
 hexColor :: Parser Color
 hexColor = do string "#"
@@ -56,68 +44,101 @@ hexColor = do string "#"
   where expandRGB xs 3 = concat $ map (\x -> [x, x]) (unpack xs)
         expandRGB xs _ = unpack xs
 
+
+
+{-
+These next few helper functions are pretty standard parsec functions
+I'm sure someone already has them in some attoparsec library somewhere
+-}
+lexeme :: Parser a -> Parser a
+lexeme p = p <* skipSpace
+
+-- case insensitive
+symbol :: Text -> Parser Text
+symbol s = lexeme $ stringCI s
+
+between :: Parser a -> Parser b -> Parser c -> Parser c
+between open close p = do
+  open
+  x <- p
+  close
+  return x
+
+parens :: Parser a -> Parser a
+parens p = between (symbol "(") (symbol ")")
+
+comma :: Parser ()
+comma = symbol "," >> return ()
+
+
+
+
+-- Is there a reason you don't use integers? or something other than strings?
+rawInteger :: Parser String
+rawInteger = liftM unpack $ takeWhile $ inClass "0-9"
+
+integer :: Parser String 
+integer = lexeme rawInteger
+
+percent :: Parser String
+percent = rawInteger <* symbol "%"
+
 rgbColor :: Parser Color
-rgbColor = do stringCI "rgb"
-              skipSpace
-              string "("
-              skipSpace
-              r <- takeWhile $ inClass "0-9"
-              percent <- optionalPercent
-              skipSpace
-              string ","
-              skipSpace
-              g <- takeWhile $ inClass "0-9"
-              optionalPercent
-              skipSpace
-              string ","
-              skipSpace
-              b <- takeWhile $ inClass "0-9"
-              optionalPercent
-              skipSpace
-              string ")"
-              case percent of
-                Just x -> return $ RGBP (unpack r) (unpack g) (unpack b)
-                Nothing -> return $ RGB (unpack r) (unpack g) (unpack b)
-  where optionalPercent = Just <$> try (string "%") <|> return Nothing
+rgbColor = do 
+  symbol "rgb"
+  (r, g, b) <- rgbParams integer
+  return $ RGB r g b
 
+rgbpColor :: Parser Color
+rgbpColor = do 
+  symbol "rgb"
+  (r, g, b) <- rgbParams percent
+  return $ RGBP r g b
+
+rgbParams :: Parser (String, String, String)
+rgbParams p = parens $ do
+  r <- p
+  symbol ","
+  g <- p
+  symbol ","
+  b <- p
+  return (r, g, b)
+
+-- Often Using data, instead of functions, makes things cleaner
 bgColorKeyword :: Parser Color
-bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
-                 purple <|> fuchsia <|> green <|> lime <|> olive <|> yellow <|>
-                 navy <|> blue <|> teal <|> aqua
-  where black   = literal "black"   (Hex "000000")
-        silver  = literal "silver"  (Hex "c0c0c0")
-        gray    = literal "gray"    (Hex "808080")
-        white   = literal "white"   (Hex "ffffff")
-        maroon  = literal "maroon"  (Hex "800000")
-        red     = literal "red"     (Hex "ff0000")
-        purple  = literal "purple"  (Hex "800080")
-        fuchsia = literal "fuchsia" (Hex "ff00ff")
-        green   = literal "green"   (Hex "008000")
-        lime    = literal "lime"    (Hex "00ff00")
-        olive   = literal "olive"   (Hex "808000")
-        yellow  = literal "yellow"  (Hex "ffff00")
-        navy    = literal "navy"    (Hex "000080")
-        blue    = literal "blue"    (Hex "0000ff")
-        teal    = literal "teal"    (Hex "008080")
-        aqua    = literal "aqua"    (Hex "00ffff")
+bgColorKeyword = asum $ fmap parseNamedColor namedColors
+  where
+    parseNamedColor (name, hexColor) = stringCI name *> pure (Hex hexColor)
+    namedColors = [ ("black",   "000000")
+                  , ("silver",  "c0c0c0")
+                  , ("gray",    "808080")
+                  , ("white",   "ffffff")
+                  , ("maroon",  "800000")
+                  , ("red",     "ff0000")
+                  , ("purple",  "800080")
+                  , ("fuchsia", "ff00ff")
+                  , ("green",   "008000")
+                  , ("lime",    "00ff00")
+                  , ("olive",   "808000")
+                  , ("yellow",  "ffff00")
+                  , ("navy",    "000080")
+                  , ("blue",    "0000ff")
+                  , ("teal",    "008080")
+                  , ("aqua",    "00ffff")
+                  ]
 
---
--- Parsing Images
---
+inherit :: Parser Color
+inherit = stringCI "inherit" *> pure InheritColor
+
 bgImage :: Parser Image
-bgImage = bgImageUrl <|> none <|> inherit
-  where none    = literal "none" NoneImage
-        inherit = literal "inherit" InheritImage
-
-bgImageUrl :: Parser Image
-bgImageUrl = do stringCI "url"
-                skipSpace
-                string "("
-                skipSpace
-                skipOptionalQuote
-                url <- takeTill (inClass "\"' ")
-                skipOptionalQuote
-                skipSpace
-                string ")"
-                return $ Url (unpack url)
+bgImage = do stringCI "url"
+             skipSpace
+             string "("
+             skipSpace
+             skipOptionalQuote
+             url <- takeTill (inClass "\"' ")
+             skipOptionalQuote
+             skipSpace
+             string ")"
+             return $ Url (unpack url)
   where skipOptionalQuote = Just <$> try (skip (inClass "\"'")) <|> return Nothing
