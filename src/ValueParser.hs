@@ -2,16 +2,16 @@
 
 module ValueParser where
 
-import Data.Attoparsec.Text -- hiding (space, take)
+import Data.Attoparsec.Text
 import qualified Data.Attoparsec.Text.Lazy as AL
 import Data.Text.Lazy (Text)
 import Data.Text (unpack)
 import qualified Data.Text as T (length)
 import Control.Applicative
 import Prelude hiding (takeWhile)
+import Data.Char
 
-parseBackground :: Text -> Maybe Color
-parseBackground s = AL.maybeResult $ AL.parse bgColor s
+data Background = Background {getColor :: Maybe Color, getImage :: Maybe Image}
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -19,6 +19,18 @@ data Color = Hex {getRGB :: String} |
              InheritColor
            deriving (Eq, Show, Ord)
 
+data Image = Url {getUrl :: String } |
+             NoneImage |
+             InheritImage
+           deriving (Eq, Show, Ord)
+
+parseBackground :: Text -> Maybe Background
+parseBackground s = AL.maybeResult $ AL.parse bg s
+
+bg :: Parser Background
+bg = do color <- Just <$> try bgColor <|> return Nothing
+        image <- Just <$> try bgImage <|> return Nothing
+        return $ Background color image
 
 bgColor :: Parser Color
 bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
@@ -94,3 +106,12 @@ bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
 inherit :: Parser Color
 inherit = stringCI "inherit" *> pure InheritColor
 
+bgImage :: Parser Image
+bgImage = do stringCI "url"
+             skipSpace
+             string "("
+             skipSpace
+             url <- takeTill isSpace
+             skipSpace
+             string ")"
+             return $ Url (unpack url)
