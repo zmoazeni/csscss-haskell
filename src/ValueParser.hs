@@ -46,13 +46,13 @@ parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
 
 bg :: Parser Background
-bg = do color <- Just <$> try bgColor <|> return Nothing
+bg = do color <- maybeTry bgColor
         skipSpace
-        image <- Just <$> try bgImage <|> return Nothing
+        image <- maybeTry bgImage
         skipSpace
-        repeat <- Just <$> try bgRepeat <|> return Nothing
+        repeat <- maybeTry bgRepeat
         skipSpace
-        attachment <- Just <$> try bgAttachment <|> return Nothing
+        attachment <- maybeTry bgAttachment
         return $ Background color image repeat attachment
 
 --
@@ -88,6 +88,9 @@ comma = symbol "," >> return ()
 
 literal :: Value v => T.Text -> v -> Parser v
 literal s result = symbol s *> pure result
+
+maybeTry :: Parser a -> Parser (Maybe a)
+maybeTry p = Just <$> try (p) <|> return Nothing
 
 --
 -- Parsing Background Colors
