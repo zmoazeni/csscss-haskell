@@ -13,11 +13,14 @@ import Prelude hiding (takeWhile)
 parseBackground :: Text -> Maybe Color
 parseBackground s = AL.maybeResult $ AL.parse bgColor s
 
-data Color = Hex {getRGB :: String} | Inherit
+data Color = Hex {getRGB :: String} |
+             RGB {getR :: String, getG :: String, getB ::String} |
+             RGBP {getRP :: String, getGP :: String, getBP :: String} |
+             Inherit
            deriving (Eq, Show, Ord)
 
 bgColor :: Parser Color
-bgColor = hexColor <|> bgColorKeyword <|> inherit
+bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
 
 hexColor :: Parser Color
 hexColor = do string "#"
@@ -26,6 +29,45 @@ hexColor = do string "#"
               return (Hex rgb)
   where expandRGB xs 3 = concat $ map (\x -> [x, x]) (unpack xs)
         expandRGB xs _ = unpack xs
+        
+rgbColor :: Parser Color
+rgbColor = do stringCI "rgb"
+              skipSpace
+              string "("
+              skipSpace
+              r <- takeWhile $ inClass "0-9"
+              skipSpace
+              string ","
+              skipSpace
+              g <- takeWhile $ inClass "0-9"
+              skipSpace
+              string ","
+              skipSpace
+              b <- takeWhile $ inClass "0-9"
+              skipSpace
+              string ")"
+              return $ RGB (unpack r) (unpack g) (unpack b)
+              
+rgbpColor :: Parser Color
+rgbpColor = do stringCI "rgb"
+               skipSpace
+               string "("
+               skipSpace
+               r <- takeWhile $ inClass "0-9"
+               string "%"
+               skipSpace
+               string ","
+               skipSpace
+               g <- takeWhile $ inClass "0-9"
+               string "%"
+               skipSpace
+               string ","
+               skipSpace
+               b <- takeWhile $ inClass "0-9"
+               string "%"
+               skipSpace
+               string ")"
+               return $ RGBP (unpack r) (unpack g) (unpack b)
 
 bgColorKeyword :: Parser Color
 bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|> 
