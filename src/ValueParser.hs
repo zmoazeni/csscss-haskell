@@ -176,18 +176,25 @@ bgImageUrl = do
 -- Parsing Repeat
 --
 bgRepeat :: Parser Repeat
-bgRepeat = repeatX <|> repeatY <|> repeat <|> norepeat <|> inherit
-  where repeat   = literal "repeat"    Repeat
-        repeatX  = literal "repeat-x"  RepeatX
-        repeatY  = literal "repeat-y"  RepeatY
-        norepeat = literal "no-repeat" NoRepeat
-        inherit  = literal "inherit"   InheritRepeat
+bgRepeat = asum $ fmap parseRepeats repeats
+  where
+    parseRepeats (value, t) = literal value t
+    repeats = [ ("repeat-x",  RepeatX)
+              , ("repeat-y",  RepeatY)
+              , ("no-repeat", NoRepeat)
+              , ("repeat",    Repeat)
+              , ("inherit",   InheritRepeat)
+              ]
+
 
 --
 -- Parsing Attachment
 --
 bgAttachment :: Parser Attachment
-bgAttachment = scroll <|> fixed <|> inherit
-  where scroll  = literal "scroll"  Scroll
-        fixed   = literal "fixed"   Fixed
-        inherit = literal "inherit" InheritAttachment
+bgAttachment = asum $ fmap parseAttachments attachments
+  where
+    parseAttachments (value, t) = literal value t
+    attachments = [ ("scroll",  Scroll)
+                  , ("fixed",   Fixed)
+                  , ("inherit", InheritAttachment)
+                  ]
