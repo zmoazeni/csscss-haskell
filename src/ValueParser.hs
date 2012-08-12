@@ -43,7 +43,7 @@ bg = do color <- Just <$> try bgColor <|> return Nothing
 literal s result = stringCI s *> pure result
 
 bgColor :: Parser Color
-bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
+bgColor = hexColor <|> rgbColor <|> bgColorKeyword <|> inherit
   where inherit = literal "inherit" InheritColor
 
 hexColor :: Parser Color
@@ -60,38 +60,23 @@ rgbColor = do stringCI "rgb"
               string "("
               skipSpace
               r <- takeWhile $ inClass "0-9"
+              percent <- optionalPercent
               skipSpace
               string ","
               skipSpace
               g <- takeWhile $ inClass "0-9"
+              optionalPercent
               skipSpace
               string ","
               skipSpace
               b <- takeWhile $ inClass "0-9"
+              optionalPercent
               skipSpace
               string ")"
-              return $ RGB (unpack r) (unpack g) (unpack b)
-
-rgbpColor :: Parser Color
-rgbpColor = do stringCI "rgb"
-               skipSpace
-               string "("
-               skipSpace
-               r <- takeWhile $ inClass "0-9"
-               string "%"
-               skipSpace
-               string ","
-               skipSpace
-               g <- takeWhile $ inClass "0-9"
-               string "%"
-               skipSpace
-               string ","
-               skipSpace
-               b <- takeWhile $ inClass "0-9"
-               string "%"
-               skipSpace
-               string ")"
-               return $ RGBP (unpack r) (unpack g) (unpack b)
+              case percent of
+                Just x -> return $ RGBP (unpack r) (unpack g) (unpack b)
+                Nothing -> return $ RGB (unpack r) (unpack g) (unpack b)
+  where optionalPercent = Just <$> try (string "%") <|> return Nothing
 
 bgColorKeyword :: Parser Color
 bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
