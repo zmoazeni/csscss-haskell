@@ -24,6 +24,10 @@ data Image = Url {getUrl :: String } |
              InheritImage
            deriving (Eq, Show, Ord)
 
+class Value a
+instance Value Color
+instance Value Image
+
 parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
 
@@ -36,9 +40,11 @@ bg = do color <- Just <$> try bgColor <|> return Nothing
 --
 -- Parsing Background Colors
 --
+literal s result = stringCI s *> pure result
+
 bgColor :: Parser Color
 bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
-  where inherit = stringCI "inherit" *> pure InheritColor
+  where inherit = literal "inherit" InheritColor
 
 hexColor :: Parser Color
 hexColor = do string "#"
@@ -91,30 +97,30 @@ bgColorKeyword :: Parser Color
 bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
                  purple <|> fuchsia <|> green <|> lime <|> olive <|> yellow <|>
                  navy <|> blue <|> teal <|> aqua
-  where black   = stringCI "black"   *> pure (Hex "000000")
-        silver  = stringCI "silver"  *> pure (Hex "c0c0c0")
-        gray    = stringCI "gray"    *> pure (Hex "808080")
-        white   = stringCI "white"   *> pure (Hex "ffffff")
-        maroon  = stringCI "maroon"  *> pure (Hex "800000")
-        red     = stringCI "red"     *> pure (Hex "ff0000")
-        purple  = stringCI "purple"  *> pure (Hex "800080")
-        fuchsia = stringCI "fuchsia" *> pure (Hex "ff00ff")
-        green   = stringCI "green"   *> pure (Hex "008000")
-        lime    = stringCI "lime"    *> pure (Hex "00ff00")
-        olive   = stringCI "olive"   *> pure (Hex "808000")
-        yellow  = stringCI "yellow"  *> pure (Hex "ffff00")
-        navy    = stringCI "navy"    *> pure (Hex "000080")
-        blue    = stringCI "blue"    *> pure (Hex "0000ff")
-        teal    = stringCI "teal"    *> pure (Hex "008080")
-        aqua    = stringCI "aqua"    *> pure (Hex "00ffff")
+  where black   = literal "black"   (Hex "000000")
+        silver  = literal "silver"  (Hex "c0c0c0")
+        gray    = literal "gray"    (Hex "808080")
+        white   = literal "white"   (Hex "ffffff")
+        maroon  = literal "maroon"  (Hex "800000")
+        red     = literal "red"     (Hex "ff0000")
+        purple  = literal "purple"  (Hex "800080")
+        fuchsia = literal "fuchsia" (Hex "ff00ff")
+        green   = literal "green"   (Hex "008000")
+        lime    = literal "lime"    (Hex "00ff00")
+        olive   = literal "olive"   (Hex "808000")
+        yellow  = literal "yellow"  (Hex "ffff00")
+        navy    = literal "navy"    (Hex "000080")
+        blue    = literal "blue"    (Hex "0000ff")
+        teal    = literal "teal"    (Hex "008080")
+        aqua    = literal "aqua"    (Hex "00ffff")
 
 --
 -- Parsing Images
 --
 bgImage :: Parser Image
 bgImage = bgImageUrl <|> none <|> inherit
-  where none    = stringCI "none"    *> pure NoneImage
-        inherit = stringCI "inherit" *> pure InheritImage
+  where none    = literal "none" NoneImage
+        inherit = literal "inherit" InheritImage
 
 bgImageUrl :: Parser Image
 bgImageUrl = do stringCI "url"
