@@ -107,14 +107,19 @@ inherit :: Parser Color
 inherit = stringCI "inherit" *> pure InheritColor
 
 bgImage :: Parser Image
-bgImage = do stringCI "url"
-             skipSpace
-             string "("
-             skipSpace
-             skipOptionalQuote
-             url <- takeTill (inClass "\"' ")
-             skipOptionalQuote
-             skipSpace
-             string ")"
-             return $ Url (unpack url)
+bgImage = bgImageUrl <|> none <|> inherit
+  where none    = stringCI "none"    *> pure NoneImage
+        inherit = stringCI "inherit" *> pure InheritImage
+
+bgImageUrl :: Parser Image
+bgImageUrl = do stringCI "url"
+                skipSpace
+                string "("
+                skipSpace
+                skipOptionalQuote
+                url <- takeTill (inClass "\"' ")
+                skipOptionalQuote
+                skipSpace
+                string ")"
+                return $ Url (unpack url)
   where skipOptionalQuote = Just <$> try (skip (inClass "\"'")) <|> return Nothing

@@ -43,3 +43,9 @@ main = hspec $ do
     it "parses url no quote" $ do
       parseImage "url (   http://foo.com  )" == Url "http://foo.com"
 
+    it "parses inherit" $ do
+      parseImage "inherit" == InheritImage
+
+    it "parses none" $ do
+      parseImage "none" == NoneImage
+
