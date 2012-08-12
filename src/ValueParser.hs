@@ -9,7 +9,7 @@ import Control.Applicative
 
 
 parseBackground :: Text -> Maybe Color
-parseBackground s = AL.maybeResult $ AL.parse backgroundColor s
+parseBackground s = AL.maybeResult $ AL.parse bgColor s
 
 data Color = Hex {getRGB :: String} | Inherit
            deriving (Eq, Show, Ord)
@@ -17,10 +17,10 @@ data Color = Hex {getRGB :: String} | Inherit
 inherit :: Parser Color
 inherit = stringCI "inherit" *> pure Inherit
 
-backgroundColorKeyword :: Parser Color
-backgroundColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|> 
-                         purple <|> fuchsia <|> green <|> lime <|> olive <|> yellow <|>
-                         navy <|> blue <|> teal <|> aqua
+bgColorKeyword :: Parser Color
+bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|> 
+                 purple <|> fuchsia <|> green <|> lime <|> olive <|> yellow <|>
+                 navy <|> blue <|> teal <|> aqua
   where black   = stringCI "black"   *> pure (Hex "000000")
         silver  = stringCI "silver"  *> pure (Hex "c0c0c0")
         gray    = stringCI "gray"    *> pure (Hex "808080")
@@ -38,6 +38,6 @@ backgroundColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red 
         teal    = stringCI "teal"    *> pure (Hex "008080")
         aqua    = stringCI "aqua"    *> pure (Hex "00ffff")
 
-backgroundColor :: Parser Color
-backgroundColor = backgroundColorKeyword <|> inherit
+bgColor :: Parser Color
+bgColor = bgColorKeyword <|> inherit
                      
