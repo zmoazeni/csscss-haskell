@@ -8,7 +8,7 @@ import Data.Attoparsec.Text
 import qualified Data.Attoparsec.Text.Lazy as AL
 import Data.Text.Lazy (Text)
 import Data.Text (unpack)
-import qualified Data.Text as T (length)
+import qualified Data.Text as T (Text, length)
 import Control.Applicative
 import Prelude hiding (takeWhile)
 import Data.Char
@@ -56,16 +56,40 @@ bg = do color <- Just <$> try bgColor <|> return Nothing
         return $ Background color image repeat attachment
 
 --
+-- Utility
+--
+lexeme :: Parser a -> Parser a
+lexeme p = p <* skipSpace
+
+-- case insensitive
+symbol :: T.Text -> Parser T.Text
+symbol s = lexeme $ stringCI s
+
+between :: Parser a -> Parser b -> Parser c -> Parser c
+between open close p = do
+  open
+  x <- p
+  close
+  return x
+
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+
+comma :: Parser ()
+comma = symbol "," >> return ()
+
+literal s result = symbol s *> pure result
+
+--
 -- Parsing Background Colors
 --
-literal s result = stringCI s *> pure result
 
 bgColor :: Parser Color
-bgColor = hexColor <|> rgbColor <|> bgColorKeyword <|> inherit
+bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
   where inherit = literal "inherit" InheritColor
 
 hexColor :: Parser Color
-hexColor = do string "#"
+hexColor = do symbol "#"
               rawRGB <- takeWhile $ inClass "a-fA-F0-9"
               let rgb = expandRGB rawRGB (T.length rawRGB)
               return (Hex rgb)
@@ -73,28 +97,26 @@ hexColor = do string "#"
         expandRGB xs _ = unpack xs
 
 rgbColor :: Parser Color
-rgbColor = do stringCI "rgb"
-              skipSpace
-              string "("
-              skipSpace
-              r <- takeWhile $ inClass "0-9"
-              percent <- optionalPercent
-              skipSpace
-              string ","
-              skipSpace
-              g <- takeWhile $ inClass "0-9"
-              optionalPercent
-              skipSpace
-              string ","
-              skipSpace
-              b <- takeWhile $ inClass "0-9"
-              optionalPercent
-              skipSpace
-              string ")"
-              case percent of
-                Just x -> return $ RGBP (unpack r) (unpack g) (unpack b)
-                Nothing -> return $ RGB (unpack r) (unpack g) (unpack b)
-  where optionalPercent = Just <$> try (string "%") <|> return Nothing
+rgbColor = do
+  symbol "rgb"
+  (r, g, b) <- rgbParams (takeWhile isNumber)
+  return $ RGB r g b
+
+rgbpColor :: Parser Color
+rgbpColor = do
+  symbol "rgb"
+  (r, g, b) <- rgbParams percent
+  return $ RGBP r g b
+  where percent = takeWhile isNumber <* symbol "%"
+
+rgbParams :: Parser T.Text -> Parser (String, String, String)
+rgbParams p = parens $ do
+  r <- p
+  symbol ","
+  g <- p
+  symbol ","
+  b <- p
+  return (unpack r, unpack g, unpack b)
 
 bgColorKeyword :: Parser Color
 bgColorKeyword = asum $ fmap parseNamedColor namedColors
