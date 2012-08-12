@@ -32,6 +32,9 @@ bg = do color <- Just <$> try bgColor <|> return Nothing
         image <- Just <$> try bgImage <|> return Nothing
         return $ Background color image
 
+--
+-- Parsing Background Colors
+--
 bgColor :: Parser Color
 bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
   where inherit = stringCI "inherit" *> pure InheritColor
@@ -104,6 +107,9 @@ bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
         teal    = stringCI "teal"    *> pure (Hex "008080")
         aqua    = stringCI "aqua"    *> pure (Hex "00ffff")
 
+--
+-- Parsing Images
+--
 bgImage :: Parser Image
 bgImage = bgImageUrl <|> none <|> inherit
   where none    = stringCI "none"    *> pure NoneImage
