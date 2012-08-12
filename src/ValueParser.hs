@@ -5,8 +5,10 @@ module ValueParser where
 import Data.Attoparsec.Text -- hiding (space, take)
 import qualified Data.Attoparsec.Text.Lazy as AL
 import Data.Text.Lazy (Text)
+import Data.Text (unpack)
+import qualified Data.Text as T (length)
 import Control.Applicative
-
+import Prelude hiding (takeWhile)
 
 parseBackground :: Text -> Maybe Color
 parseBackground s = AL.maybeResult $ AL.parse bgColor s
@@ -14,8 +16,16 @@ parseBackground s = AL.maybeResult $ AL.parse bgColor s
 data Color = Hex {getRGB :: String} | Inherit
            deriving (Eq, Show, Ord)
 
-inherit :: Parser Color
-inherit = stringCI "inherit" *> pure Inherit
+bgColor :: Parser Color
+bgColor = hexColor <|> bgColorKeyword <|> inherit
+
+hexColor :: Parser Color
+hexColor = do string "#"
+              rawRGB <- takeWhile $ inClass "a-fA-F0-9"
+              let rgb = expandRGB rawRGB (T.length rawRGB)
+              return (Hex rgb)
+  where expandRGB xs 3 = concat $ map (\x -> [x, x]) (unpack xs)
+        expandRGB xs _ = unpack xs
 
 bgColorKeyword :: Parser Color
 bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|> 
@@ -37,7 +47,7 @@ bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
         blue    = stringCI "blue"    *> pure (Hex "0000ff")
         teal    = stringCI "teal"    *> pure (Hex "008080")
         aqua    = stringCI "aqua"    *> pure (Hex "00ffff")
-
-bgColor :: Parser Color
-bgColor = bgColorKeyword <|> inherit
                      
+inherit :: Parser Color
+inherit = stringCI "inherit" *> pure Inherit
+

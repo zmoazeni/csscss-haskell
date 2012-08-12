@@ -8,11 +8,18 @@ import System.IO.Unsafe
 import Debug.Trace
 import Data.Maybe
 
+-- trace (show $ parseBackground "black") False
+
 main = hspec $ do
-  describe "background" $ do
-    it "playing with parser" $ do
-      -- trace (show $ parseBackground "black") False
+  describe "background color" $ do
+    it "parses 6 char hex" $ do
+      fromJust (parseBackground "#f12fff") == Hex "f12fff"
+
+    it "parses 3 char hex" $ do
+      fromJust (parseBackground "#f12") == Hex "ff1122"
+
+    it "parses known keywords" $ do
       fromJust (parseBackground "black") == Hex "000000"
       
-    it "playing with parser2" $ do
+    it "parses inherit" $ do
       fromJust (parseBackground "inherit") == Inherit
