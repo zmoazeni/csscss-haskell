@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- Parser is built from http://www.w3.org/TR/CSS/ as a reference
+
 module ValueParser where
 
 import Data.Attoparsec.Text
