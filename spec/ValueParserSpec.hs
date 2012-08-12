@@ -12,8 +12,7 @@ main = hspec $ do
   describe "background" $ do
     it "playing with parser" $ do
       -- trace (show $ parseBackground "black") False
-      fromJust (parseBackground "black") == "black"
+      fromJust (parseBackground "black") == Hex "000000"
       
     it "playing with parser2" $ do
-      -- trace (show $ parseBackground "black") False
-      fromJust (parseBackground "inherit") == "inherit"
+      fromJust (parseBackground "inherit") == Inherit
