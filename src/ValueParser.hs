@@ -13,9 +13,10 @@ import Control.Applicative
 import Prelude hiding (takeWhile)
 import Data.Char
 
-data Background = Background {getColor  :: Maybe Color,
-                              getImage  :: Maybe Image,
-                              getRepeat :: Maybe Repeat}
+data Background = Background {getColor      :: Maybe Color,
+                              getImage      :: Maybe Image,
+                              getRepeat     :: Maybe Repeat,
+                              getAttachment :: Maybe Attachment}
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -31,10 +32,14 @@ data Image = Url {getUrl :: String } |
 data Repeat = Repeat | RepeatX | RepeatY | NoRepeat | InheritRepeat
             deriving (Eq, Show, Ord)
 
+data Attachment = Scroll | Fixed | InheritAttachment
+            deriving (Eq, Show, Ord)
+
 class Value a
 instance Value Color
 instance Value Image
 instance Value Repeat
+instance Value Attachment
 
 parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
@@ -45,7 +50,9 @@ bg = do color <- Just <$> try bgColor <|> return Nothing
         image <- Just <$> try bgImage <|> return Nothing
         skipSpace
         repeat <- Just <$> try bgRepeat <|> return Nothing
-        return $ Background color image repeat
+        skipSpace
+        attachment <- Just <$> try bgAttachment <|> return Nothing
+        return $ Background color image repeat attachment
 
 --
 -- Parsing Background Colors
@@ -134,9 +141,18 @@ bgImageUrl = do stringCI "url"
 -- Parsing Repeat
 --
 bgRepeat :: Parser Repeat
-bgRepeat = (repeat <* endOfInput) <|> repeatX <|> repeatY <|> norepeat <|> inherit
+bgRepeat = repeatX <|> repeatY <|> repeat <|> norepeat <|> inherit
   where repeat   = literal "repeat"    Repeat
         repeatX  = literal "repeat-x"  RepeatX
         repeatY  = literal "repeat-y"  RepeatY
         norepeat = literal "no-repeat" NoRepeat
         inherit  = literal "inherit"   InheritRepeat
+
+--
+-- Parsing Attachment
+--
+bgAttachment :: Parser Attachment
+bgAttachment = scroll <|> fixed <|> inherit
+  where scroll  = literal "scroll"  Scroll
+        fixed   = literal "fixed"   Fixed
+        inherit = literal "inherit" InheritAttachment

@@ -11,9 +11,11 @@ import Data.Maybe
 -- trace (show $ parseBackground "black") False
 
 parseSingle f = fromJust . f . fromJust . parseBackground
-parseColor  = parseSingle getColor
-parseImage  = parseSingle getImage
-parseRepeat = parseSingle getRepeat
+
+parseColor      = parseSingle getColor
+parseImage      = parseSingle getImage
+parseRepeat     = parseSingle getRepeat
+parseAttachment = parseSingle getAttachment
 
 main = hspec $ do
   describe "background color" $ do
@@ -67,3 +69,12 @@ main = hspec $ do
     it "parses inherit" $ do
       parseRepeat "black none inherit" == InheritRepeat
 
+  describe "background attachment" $ do
+    it "parses scroll" $ do
+      parseAttachment "scroll" == Scroll
+
+    it "parses fixed" $ do
+      parseAttachment "fixed" == Fixed
+
+    it "parses inherit" $ do
+      parseAttachment "black none repeat inherit" == InheritAttachment
