@@ -44,7 +44,7 @@ main = hspec $ do
       parseImage "url (   http://foo.com  )" == Url "http://foo.com"
 
     it "parses inherit" $ do
-      parseImage "inherit" == InheritImage
+      parseImage "black inherit" == InheritImage
 
     it "parses none" $ do
       parseImage "none" == NoneImage

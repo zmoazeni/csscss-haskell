@@ -29,6 +29,7 @@ parseBackground s = AL.maybeResult $ AL.parse bg s
 
 bg :: Parser Background
 bg = do color <- Just <$> try bgColor <|> return Nothing
+        skipSpace
         image <- Just <$> try bgImage <|> return Nothing
         return $ Background color image
 
