@@ -16,7 +16,7 @@ parseBackground s = AL.maybeResult $ AL.parse bgColor s
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
              RGBP {getRP :: String, getGP :: String, getBP :: String} |
-             Inherit
+             InheritColor
            deriving (Eq, Show, Ord)
 
 bgColor :: Parser Color
@@ -91,5 +91,5 @@ bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
         aqua    = stringCI "aqua"    *> pure (Hex "00ffff")
                      
 inherit :: Parser Color
-inherit = stringCI "inherit" *> pure Inherit
+inherit = stringCI "inherit" *> pure InheritColor
 

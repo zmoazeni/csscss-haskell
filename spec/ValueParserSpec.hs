@@ -28,4 +28,4 @@ main = hspec $ do
       fromJust (parseBackground "black") == Hex "000000"
       
     it "parses inherit" $ do
-      fromJust (parseBackground "inherit") == Inherit
+      fromJust (parseBackground "inherit") == InheritColor
