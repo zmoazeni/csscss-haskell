@@ -19,6 +19,7 @@ data Color = Hex {getRGB :: String} |
              InheritColor
            deriving (Eq, Show, Ord)
 
+
 bgColor :: Parser Color
 bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
 
@@ -29,7 +30,7 @@ hexColor = do string "#"
               return (Hex rgb)
   where expandRGB xs 3 = concat $ map (\x -> [x, x]) (unpack xs)
         expandRGB xs _ = unpack xs
-        
+
 rgbColor :: Parser Color
 rgbColor = do stringCI "rgb"
               skipSpace
@@ -47,7 +48,7 @@ rgbColor = do stringCI "rgb"
               skipSpace
               string ")"
               return $ RGB (unpack r) (unpack g) (unpack b)
-              
+
 rgbpColor :: Parser Color
 rgbpColor = do stringCI "rgb"
                skipSpace
@@ -70,7 +71,7 @@ rgbpColor = do stringCI "rgb"
                return $ RGBP (unpack r) (unpack g) (unpack b)
 
 bgColorKeyword :: Parser Color
-bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|> 
+bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
                  purple <|> fuchsia <|> green <|> lime <|> olive <|> yellow <|>
                  navy <|> blue <|> teal <|> aqua
   where black   = stringCI "black"   *> pure (Hex "000000")
@@ -89,7 +90,7 @@ bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
         blue    = stringCI "blue"    *> pure (Hex "0000ff")
         teal    = stringCI "teal"    *> pure (Hex "008080")
         aqua    = stringCI "aqua"    *> pure (Hex "00ffff")
-                     
+
 inherit :: Parser Color
 inherit = stringCI "inherit" *> pure InheritColor
 
