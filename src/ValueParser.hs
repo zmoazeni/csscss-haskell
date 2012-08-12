@@ -12,6 +12,7 @@ import qualified Data.Text as T (length)
 import Control.Applicative
 import Prelude hiding (takeWhile)
 import Data.Char
+import Data.Foldable
 
 data Background = Background {getColor      :: Maybe Color,
                               getImage      :: Maybe Image,
@@ -68,7 +69,7 @@ hexColor = do string "#"
               rawRGB <- takeWhile $ inClass "a-fA-F0-9"
               let rgb = expandRGB rawRGB (T.length rawRGB)
               return (Hex rgb)
-  where expandRGB xs 3 = concat $ map (\x -> [x, x]) (unpack xs)
+  where expandRGB xs 3 = Prelude.concat $ map (\x -> [x, x]) (unpack xs)
         expandRGB xs _ = unpack xs
 
 rgbColor :: Parser Color
@@ -96,25 +97,26 @@ rgbColor = do stringCI "rgb"
   where optionalPercent = Just <$> try (string "%") <|> return Nothing
 
 bgColorKeyword :: Parser Color
-bgColorKeyword = black <|> silver <|> gray <|> white <|> maroon <|> red <|>
-                 purple <|> fuchsia <|> green <|> lime <|> olive <|> yellow <|>
-                 navy <|> blue <|> teal <|> aqua
-  where black   = literal "black"   (Hex "000000")
-        silver  = literal "silver"  (Hex "c0c0c0")
-        gray    = literal "gray"    (Hex "808080")
-        white   = literal "white"   (Hex "ffffff")
-        maroon  = literal "maroon"  (Hex "800000")
-        red     = literal "red"     (Hex "ff0000")
-        purple  = literal "purple"  (Hex "800080")
-        fuchsia = literal "fuchsia" (Hex "ff00ff")
-        green   = literal "green"   (Hex "008000")
-        lime    = literal "lime"    (Hex "00ff00")
-        olive   = literal "olive"   (Hex "808000")
-        yellow  = literal "yellow"  (Hex "ffff00")
-        navy    = literal "navy"    (Hex "000080")
-        blue    = literal "blue"    (Hex "0000ff")
-        teal    = literal "teal"    (Hex "008080")
-        aqua    = literal "aqua"    (Hex "00ffff")
+bgColorKeyword = asum $ fmap parseNamedColor namedColors
+  where
+    parseNamedColor (name, hexColor) = stringCI name *> pure (Hex hexColor)
+    namedColors = [ ("black",   "000000")
+                  , ("silver",  "c0c0c0")
+                  , ("gray",    "808080")
+                  , ("white",   "ffffff")
+                  , ("maroon",  "800000")
+                  , ("red",     "ff0000")
+                  , ("purple",  "800080")
+                  , ("fuchsia", "ff00ff")
+                  , ("green",   "008000")
+                  , ("lime",    "00ff00")
+                  , ("olive",   "808000")
+                  , ("yellow",  "ffff00")
+                  , ("navy",    "000080")
+                  , ("blue",    "0000ff")
+                  , ("teal",    "008080")
+                  , ("aqua",    "00ffff")
+                  ]
 
 --
 -- Parsing Images
