@@ -18,7 +18,8 @@ data Background = Background {getColor      :: Maybe Color,
                               getImage      :: Maybe Image,
                               getRepeat     :: Maybe Repeat,
                               getAttachment :: Maybe Attachment,
-                              getPosition   :: Maybe Position}
+                              getPosition   :: Maybe Position} | InheritBackground
+                deriving (Eq, Show, Ord)
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -60,16 +61,21 @@ parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
 
 bg :: Parser Background
-bg = do color <- maybeTry bgColor
-        skipSpace
-        image <- maybeTry bgImage
-        skipSpace
-        repeat <- maybeTry bgRepeat
-        skipSpace
-        attachment <- maybeTry bgAttachment
-        skipSpace
-        position <- maybeTry bgPosition
-        return $ Background color image repeat attachment position
+bg = inherit <|> longhand
+  where
+    inherit = do symbol "inherit"
+                 endOfInput
+                 return InheritBackground
+    longhand = do color <- maybeTry bgColor
+                  skipSpace
+                  image <- maybeTry bgImage
+                  skipSpace
+                  repeat <- maybeTry bgRepeat
+                  skipSpace
+                  attachment <- maybeTry bgAttachment
+                  skipSpace
+                  position <- maybeTry bgPosition
+                  return $ Background color image repeat attachment position
 
 --
 -- Utility

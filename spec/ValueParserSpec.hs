@@ -10,7 +10,8 @@ import Data.Maybe
 
 -- trace (show $ parseBackground "black") False
 
-parseSingle f = fromJust . f . fromJust . parseBackground
+parseBg = fromJust . parseBackground
+parseSingle f = fromJust . f . parseBg
 
 parseColor      = parseSingle getColor
 parseImage      = parseSingle getImage
@@ -19,6 +20,18 @@ parseAttachment = parseSingle getAttachment
 parsePosition   = parseSingle getPosition
 
 main = hspec $ do
+  describe "background" $ do
+    it "parses inherit background" $ do
+      parseBg "inherit" == InheritBackground
+
+    it "parses longhand" $ do
+      parseBg "#fa1023 url(foo.jpeg) repeat-x scroll left top" ==
+        Background (Just (Hex "fa1023")) (Just (Url "foo.jpeg")) (Just RepeatX) (Just Scroll) (Just (Position (LeftPoint, (Just TopPoint))))
+
+    it "parses longhand2" $ do
+      parseBg "url(foo.jpeg) repeat-x 10px" ==
+        Background Nothing (Just (Url "foo.jpeg")) (Just RepeatX) Nothing (Just (Position (Length 10 PX, Nothing)))
+
   describe "background color" $ do
     it "parses 6 char hex" $ do
       parseColor "#f12fff" == Hex "f12fff"
@@ -36,7 +49,7 @@ main = hspec $ do
       parseColor "black" == Hex "000000"
 
     it "parses inherit" $ do
-      parseColor "inherit" == InheritColor
+      parseColor "inherit left" == InheritColor
 
   describe "background image" $ do
     it "parses url single quote" $ do
