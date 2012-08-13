@@ -16,6 +16,7 @@ parseColor      = parseSingle getColor
 parseImage      = parseSingle getImage
 parseRepeat     = parseSingle getRepeat
 parseAttachment = parseSingle getAttachment
+parsePosition   = parseSingle getPosition
 
 main = hspec $ do
   describe "background color" $ do
@@ -78,3 +79,28 @@ main = hspec $ do
 
     it "parses inherit" $ do
       parseAttachment "black none repeat inherit" == InheritAttachment
+
+  describe "background position" $ do
+    it "parses single" $ do
+      parsePosition "left" == Position (LeftPoint, Nothing)
+
+    it "parses two" $ do
+      parsePosition "left top" == Position (LeftPoint, Just TopPoint)
+
+    it "parses single %" $ do
+      parsePosition "10%" == Position (Percent 10, Nothing)
+
+    it "parses two %" $ do
+      parsePosition "10% 50%" == Position (Percent 10, Just (Percent 50))
+
+    it "parses single length" $ do
+      parsePosition "10px" == Position (Length 10 PX, Nothing)
+
+    it "parses two lengths" $ do
+      parsePosition "10px 5em" == Position (Length 10 PX, Just (Length 5 EM))
+
+    it "parses two different" $ do
+      parsePosition "left 10%" == Position (LeftPoint, Just (Percent 10))
+
+    it "parses inherit" $ do
+      parsePosition "black none repeat fixed inherit" == InheritPosition

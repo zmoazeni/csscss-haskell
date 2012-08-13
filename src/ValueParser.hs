@@ -17,7 +17,8 @@ import Data.Foldable
 data Background = Background {getColor      :: Maybe Color,
                               getImage      :: Maybe Image,
                               getRepeat     :: Maybe Repeat,
-                              getAttachment :: Maybe Attachment}
+                              getAttachment :: Maybe Attachment,
+                              getPosition   :: Maybe Position}
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -36,11 +37,24 @@ data Repeat = Repeat | RepeatX | RepeatY | NoRepeat | InheritRepeat
 data Attachment = Scroll | Fixed | InheritAttachment
             deriving (Eq, Show, Ord)
 
+data LengthUnit = PX | EM | EX | IN | CM | MM | PT | PC
+                deriving (Eq, Show, Ord)
+
+data Point = LeftPoint | RightPoint | CenterPoint | TopPoint | BottomPoint
+           | Percent Number | Length {getLength :: Number, getLengthUnit :: LengthUnit}
+           deriving (Eq, Show, Ord)
+
+data Position = Position (Point, Maybe Point) | InheritPosition
+              deriving (Eq, Show, Ord)
+
 class Value a
 instance Value Color
 instance Value Image
 instance Value Repeat
 instance Value Attachment
+instance Value Position
+instance Value Point
+instance Value LengthUnit
 
 parseBackground :: Text -> Maybe Background
 parseBackground s = AL.maybeResult $ AL.parse bg s
@@ -53,7 +67,9 @@ bg = do color <- maybeTry bgColor
         repeat <- maybeTry bgRepeat
         skipSpace
         attachment <- maybeTry bgAttachment
-        return $ Background color image repeat attachment
+        skipSpace
+        position <- maybeTry bgPosition
+        return $ Background color image repeat attachment position
 
 --
 -- Utility
@@ -88,6 +104,9 @@ comma = symbol "," >> return ()
 
 literal :: Value v => T.Text -> v -> Parser v
 literal s result = symbol s *> pure result
+
+literalMap :: Value v => (T.Text, v) -> Parser v
+literalMap (t, v) = literal t v
 
 maybeTry :: Parser a -> Parser (Maybe a)
 maybeTry p = Just <$> try (p) <|> return Nothing
@@ -186,7 +205,6 @@ bgRepeat = asum $ fmap parseRepeats repeats
               , ("inherit",   InheritRepeat)
               ]
 
-
 --
 -- Parsing Attachment
 --
@@ -198,3 +216,41 @@ bgAttachment = asum $ fmap parseAttachments attachments
                   , ("fixed",   Fixed)
                   , ("inherit", InheritAttachment)
                   ]
+
+--
+-- Parsing Position
+--
+bgPosition :: Parser Position
+bgPosition = points <|> inherit
+  where
+    points = do
+      h <- asum $ (fmap literalMap hKeywords) ++ [percentParser, lengthParser]
+      v <- maybeTry . asum $ (fmap literalMap vKeywords) ++ [percentParser, lengthParser]
+      return $ Position (h, v)
+
+    inherit = literalMap ("inherit", InheritPosition)
+
+    percentParser = do p <- number
+                       symbol "%"
+                       return $ Percent p
+
+    lengthParser = do len <- number
+                      unit <- asum $ fmap literalMap units
+                      return $ Length len unit
+
+    units = [ ("px", PX)
+            , ("em", EM)
+            , ("ex", EX)
+            , ("in", IN)
+            , ("cm", CM)
+            , ("mm", MM)
+            , ("pt", PT)
+            , ("pc", PC)]
+
+    hKeywords = [ ("left",   LeftPoint)
+                , ("right",  RightPoint)
+                , ("center", CenterPoint)]
+
+    vKeywords = [ ("top",    TopPoint)
+                , ("bottom", BottomPoint)
+                , ("center", CenterPoint)]
