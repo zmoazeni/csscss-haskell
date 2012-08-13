@@ -195,9 +195,8 @@ bgImageUrl = do
 -- Parsing Repeat
 --
 bgRepeat :: Parser Repeat
-bgRepeat = asum $ fmap parseRepeats repeats
+bgRepeat = asum $ fmap literalMap repeats
   where
-    parseRepeats (value, t) = literal value t
     repeats = [ ("repeat-x",  RepeatX)
               , ("repeat-y",  RepeatY)
               , ("no-repeat", NoRepeat)
@@ -209,9 +208,8 @@ bgRepeat = asum $ fmap parseRepeats repeats
 -- Parsing Attachment
 --
 bgAttachment :: Parser Attachment
-bgAttachment = asum $ fmap parseAttachments attachments
+bgAttachment = asum $ fmap literalMap attachments
   where
-    parseAttachments (value, t) = literal value t
     attachments = [ ("scroll",  Scroll)
                   , ("fixed",   Fixed)
                   , ("inherit", InheritAttachment)
