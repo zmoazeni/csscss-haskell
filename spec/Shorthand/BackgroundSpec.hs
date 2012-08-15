@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ValueParserSpec (main) where
+module Shorthand.BackgroundSpec (main) where
 
 import Test.Hspec
-import ValueParser
+import Shorthand
 import System.IO.Unsafe
 import Debug.Trace
 import Data.Maybe

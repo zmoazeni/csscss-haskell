@@ -1,19 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- Parser is built from http://www.w3.org/TR/CSS/ as a reference
+module Shorthand.Background (
+    Background (..)
+  , Repeat (..)
+  , Attachment (..)
 
-module ValueParser where
+  , parseBackground
+  , backgroundParser
+  )
+where
 
+import Shorthand.Utility
 import Data.Attoparsec.Text
 import qualified Data.Attoparsec.Text.Lazy as AL
-import Data.Text.Lazy (Text)
-import Data.Text (unpack)
-import qualified Data.Text as T (Text, length)
-import Control.Applicative
 import Prelude hiding (takeWhile)
-import Data.Char
+import Control.Applicative
 import Data.Foldable
+import Data.Char
 import Control.Monad (liftM)
+import Data.Text (unpack)
+import Data.Text.Lazy as L (Text)
+import Data.Text as T (Text, length)
+
+
 
 data Background = Background {getColor      :: Maybe Color,
                               getImage      :: Maybe Image,
@@ -22,55 +31,21 @@ data Background = Background {getColor      :: Maybe Color,
                               getPosition   :: Maybe Position} | InheritBackground
                 deriving (Eq, Show, Ord)
 
-data Color = Hex {getRGB :: String} |
-             RGB {getR :: String, getG :: String, getB ::String} |
-             RGBP {getRP :: String, getGP :: String, getBP :: String} |
-             InheritColor
-           deriving (Eq, Show, Ord)
-
-data Image = Url {getUrl :: String } |
-             NoneImage |
-             InheritImage
-           deriving (Eq, Show, Ord)
-
 data Repeat = Repeat | RepeatX | RepeatY | NoRepeat | InheritRepeat
             deriving (Eq, Show, Ord)
 
 data Attachment = Scroll | Fixed | InheritAttachment
             deriving (Eq, Show, Ord)
 
-data LengthUnit = PX | EM | EX | IN | CM | MM | PT | PC
-                deriving (Eq, Show, Ord)
 
-
-data Length = Percent Number | Length {getLength :: Number, getLengthUnit :: LengthUnit}
-           deriving (Eq, Show, Ord)
-
-
-data HorizontalPoint = LeftPoint | RightPoint | HCenterPoint | HLength Length
-           deriving (Eq, Show, Ord)
-
-data VerticalPoint = TopPoint | BottomPoint | VCenterPoint | VLength Length
-           deriving (Eq, Show, Ord)
-
-data Position = Position (HorizontalPoint, Maybe VerticalPoint) | InheritPosition
-              deriving (Eq, Show, Ord)
-
-class Value a
-instance Value Color
-instance Value Image
 instance Value Repeat
 instance Value Attachment
-instance Value Position
-instance Value HorizontalPoint
-instance Value VerticalPoint
-instance Value LengthUnit
 
-parseBackground :: Text -> Maybe Background
-parseBackground s = AL.maybeResult $ AL.parse bg s
+parseBackground :: L.Text -> Maybe Background
+parseBackground s = AL.maybeResult $ AL.parse backgroundParser s
 
-bg :: Parser Background
-bg = inherit <|> longhand
+backgroundParser :: Parser Background
+backgroundParser = inherit <|> longhand
   where
     inherit = do symbol "inherit"
                  endOfInput
@@ -86,48 +61,9 @@ bg = inherit <|> longhand
                   position <- maybeTry bgPosition
                   return $ Background color image repeat attachment position
 
---
--- Utility
---
-lexeme :: Parser a -> Parser a
-lexeme p = p <* skipSpace
-
--- case insensitive
-symbol :: T.Text -> Parser T.Text
-symbol s = lexeme $ stringCI s
-
-between :: Parser a -> Parser b -> Parser c -> Parser c
-between open close p = do
-  open
-  skipSpace
-  x <- p
-  skipSpace
-  close
-  return x
-
-parens :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
-
-singleQuotes :: Parser a -> Parser a
-singleQuotes = between (symbol "'") (symbol "'")
-
-doubleQuotes :: Parser a -> Parser a
-doubleQuotes = between (symbol "\"") (symbol "\"")
-
-comma :: Parser ()
-comma = symbol "," >> return ()
-
-literal :: Value v => T.Text -> v -> Parser v
-literal s result = symbol s *> pure result
-
-literalMap :: Value v => (T.Text, v) -> Parser v
-literalMap (t, v) = literal t v
-
-maybeTry :: Parser a -> Parser (Maybe a)
-maybeTry p = Just <$> try (p) <|> return Nothing
 
 --
--- Parsing Background Colors
+-- Colors
 --
 
 bgColor :: Parser Color
@@ -187,7 +123,7 @@ bgColorKeyword = asum $ fmap parseNamedColor namedColors
                   ]
 
 --
--- Parsing Images
+-- Images
 --
 bgImage :: Parser Image
 bgImage = bgImageUrl <|> none <|> inherit
@@ -207,7 +143,7 @@ bgImageUrl = do
         isUrl c        = isLetter c || isNumber c || inClass ":/?&." c
 
 --
--- Parsing Repeat
+-- Repeat
 --
 bgRepeat :: Parser Repeat
 bgRepeat = asum $ fmap literalMap repeats
@@ -220,7 +156,7 @@ bgRepeat = asum $ fmap literalMap repeats
               ]
 
 --
--- Parsing Attachment
+-- Attachment
 --
 bgAttachment :: Parser Attachment
 bgAttachment = asum $ fmap literalMap attachments
@@ -231,7 +167,7 @@ bgAttachment = asum $ fmap literalMap attachments
                   ]
 
 --
--- Parsing Position
+-- Position
 --
 bgPosition :: Parser Position
 bgPosition = points <|> inherit
