@@ -4,14 +4,12 @@ module Shorthand.BackgroundSpec (main) where
 
 import Test.Hspec
 import Shorthand
-import System.IO.Unsafe
-import Debug.Trace
 import Data.Maybe
 
 -- trace (show $ parseBackground "black") False
 
-parseBg = fromJust . parseBackground
-parseSingle f = fromJust . f . parseBg
+parse = fromJust . parseBackground
+parseSingle f = fromJust . f . parse
 
 parseColor      = parseSingle getColor
 parseImage      = parseSingle getImage
@@ -22,14 +20,14 @@ parsePosition   = parseSingle getPosition
 main = hspec $ do
   describe "background" $ do
     it "parses inherit background" $ do
-      parseBg "inherit" == InheritBackground
+      parse "inherit" == InheritBackground
 
     it "parses longhand" $ do
-      parseBg "#fa1023 url(foo.jpeg) repeat-x scroll left top" ==
+      parse "#fa1023 url(foo.jpeg) repeat-x scroll left top" ==
         Background (Just (Hex "fa1023")) (Just (Url "foo.jpeg")) (Just RepeatX) (Just Scroll) (Just (Position (LeftPoint, (Just TopPoint))))
 
     it "parses longhand2" $ do
-      parseBg "url(foo.jpeg) repeat-x 10px" ==
+      parse "url(foo.jpeg) repeat-x 10px" ==
         Background Nothing (Just (Url "foo.jpeg")) (Just RepeatX) Nothing (Just (Position (HLength (Length 10 PX), Nothing)))
 
   describe "background color" $ do
