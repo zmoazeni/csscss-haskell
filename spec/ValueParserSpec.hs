@@ -30,7 +30,7 @@ main = hspec $ do
 
     it "parses longhand2" $ do
       parseBg "url(foo.jpeg) repeat-x 10px" ==
-        Background Nothing (Just (Url "foo.jpeg")) (Just RepeatX) Nothing (Just (Position (Length 10 PX, Nothing)))
+        Background Nothing (Just (Url "foo.jpeg")) (Just RepeatX) Nothing (Just (Position (HLength (Length 10 PX), Nothing)))
 
   describe "background color" $ do
     it "parses 6 char hex" $ do
@@ -101,19 +101,19 @@ main = hspec $ do
       parsePosition "left top" == Position (LeftPoint, Just TopPoint)
 
     it "parses single %" $ do
-      parsePosition "10%" == Position (Percent 10, Nothing)
+      parsePosition "10%" == Position (HLength (Percent 10), Nothing)
 
     it "parses two %" $ do
-      parsePosition "10% 50%" == Position (Percent 10, Just (Percent 50))
+      parsePosition "10% 50%" == Position (HLength (Percent 10), Just (VLength (Percent 50)))
 
     it "parses single length" $ do
-      parsePosition "10px" == Position (Length 10 PX, Nothing)
+      parsePosition "10px" == Position (HLength (Length 10 PX), Nothing)
 
     it "parses two lengths" $ do
-      parsePosition "10px 5em" == Position (Length 10 PX, Just (Length 5 EM))
+      parsePosition "10px 5em" == Position (HLength (Length 10 PX), Just (VLength (Length 5 EM)))
 
     it "parses two different" $ do
-      parsePosition "left 10%" == Position (LeftPoint, Just (Percent 10))
+      parsePosition "left 10%" == Position (LeftPoint, Just (VLength (Percent 10)))
 
     it "parses inherit" $ do
       parsePosition "black none repeat fixed inherit" == InheritPosition

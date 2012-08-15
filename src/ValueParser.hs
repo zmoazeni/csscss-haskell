@@ -13,6 +13,7 @@ import Control.Applicative
 import Prelude hiding (takeWhile)
 import Data.Char
 import Data.Foldable
+import Control.Monad (liftM)
 
 data Background = Background {getColor      :: Maybe Color,
                               getImage      :: Maybe Image,
@@ -41,11 +42,18 @@ data Attachment = Scroll | Fixed | InheritAttachment
 data LengthUnit = PX | EM | EX | IN | CM | MM | PT | PC
                 deriving (Eq, Show, Ord)
 
-data Point = LeftPoint | RightPoint | CenterPoint | TopPoint | BottomPoint
-           | Percent Number | Length {getLength :: Number, getLengthUnit :: LengthUnit}
+
+data Length = Percent Number | Length {getLength :: Number, getLengthUnit :: LengthUnit}
            deriving (Eq, Show, Ord)
 
-data Position = Position (Point, Maybe Point) | InheritPosition
+
+data HorizontalPoint = LeftPoint | RightPoint | HCenterPoint | HLength Length
+           deriving (Eq, Show, Ord)
+
+data VerticalPoint = TopPoint | BottomPoint | VCenterPoint | VLength Length
+           deriving (Eq, Show, Ord)
+
+data Position = Position (HorizontalPoint, Maybe VerticalPoint) | InheritPosition
               deriving (Eq, Show, Ord)
 
 class Value a
@@ -54,7 +62,8 @@ instance Value Image
 instance Value Repeat
 instance Value Attachment
 instance Value Position
-instance Value Point
+instance Value HorizontalPoint
+instance Value VerticalPoint
 instance Value LengthUnit
 
 parseBackground :: Text -> Maybe Background
@@ -228,11 +237,14 @@ bgPosition :: Parser Position
 bgPosition = points <|> inherit
   where
     points = do
-      h <- asum $ (fmap literalMap hKeywords) ++ [percentParser, lengthParser]
-      v <- maybeTry . asum $ (fmap literalMap vKeywords) ++ [percentParser, lengthParser]
+      h <- asum $ (literalMap <$> hKeywords) ++ (h <$> [percentParser, lengthParser])
+      v <- maybeTry . asum $ (literalMap <$> vKeywords) ++ (v <$> [percentParser, lengthParser])
       return $ Position (h, v)
 
     inherit = literalMap ("inherit", InheritPosition)
+
+    h = liftM HLength
+    v = liftM VLength
 
     percentParser = do p <- number
                        symbol "%"
@@ -253,8 +265,8 @@ bgPosition = points <|> inherit
 
     hKeywords = [ ("left",   LeftPoint)
                 , ("right",  RightPoint)
-                , ("center", CenterPoint)]
+                , ("center", HCenterPoint)]
 
     vKeywords = [ ("top",    TopPoint)
                 , ("bottom", BottomPoint)
-                , ("center", CenterPoint)]
+                , ("center", VCenterPoint)]
