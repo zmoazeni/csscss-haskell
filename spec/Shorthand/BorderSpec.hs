@@ -15,10 +15,6 @@ borderWidth = fromJust . parseBorderWidth
 borderStyle = fromJust . parseBorderStyle
 
 main = hspec $ do
-  describe "border width" $ do
-    it "parses thin" $ do
-      width "thin" == BorderWidth (Just Thin) (Just Thin) (Just Thin) (Just Thin)
-
   describe "border-width" $ do
     it "parses 1" $ do
       borderWidth "thin" == BorderWidth (Just Thin) Nothing Nothing Nothing
@@ -48,3 +44,8 @@ main = hspec $ do
   describe "border" $ do
     it "parses inherit" $ do
       parse "inherit" == InheritBorder
+
+    it "parses all" $ do
+      parse "thin dashed" == Border
+        (Just (BorderWidth (Just Thin) (Just Thin) (Just Thin) (Just Thin)))
+        (Just (BorderStyle (Just Dashed) (Just Dashed) (Just Dashed) (Just Dashed)))

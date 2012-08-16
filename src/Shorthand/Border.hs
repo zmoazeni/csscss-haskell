@@ -33,7 +33,8 @@ import Data.Foldable
 
 
 
-data Border = Border {getWidth      :: Maybe BorderWidth
+data Border = Border {  getWidth :: Maybe BorderWidth
+                      , getStyle :: Maybe BorderStyle
                      } | InheritBorder
             deriving (Eq, Show, Ord)
 
@@ -86,8 +87,9 @@ borderParser = inherit <|> longhand
                  endOfInput
                  return InheritBorder
     longhand = do width <- maybeTry borderWidth
-                  -- skipSpace
-                  return $ Border width
+                  skipSpace
+                  style <- maybeTry borderStyle
+                  return $ Border width style
 
 
 widthParser :: Parser Width
@@ -122,6 +124,10 @@ styleParser = asum $ (literalMap <$> keywords)
                , ("ridge",  Ridge)
                , ("inset",  Inset)
                , ("outset", Outset)]
+
+borderStyle :: Parser BorderStyle
+borderStyle = do s <- styleParser
+                 return $ BorderStyle (Just s) (Just s) (Just s) (Just s)
 
 borderStyleParser :: Parser BorderStyle
 borderStyleParser = do ws <- many1 styleParser
