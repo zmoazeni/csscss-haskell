@@ -9,27 +9,28 @@ import Data.Maybe
 parse = fromJust . parseBorder
 parseSingle f = fromJust . f . parse
 
-parseWidth = parseSingle getWidth
+width = parseSingle getWidth
 
-parseBorderWidth' = fromJust . parseBorderWidth
+borderWidth = fromJust . parseBorderWidth
 
 main = hspec $ do
   describe "border width" $ do
     it "parses thin" $ do
-      parseWidth "thin" == BorderWidth (Just Thin) (Just Thin) (Just Thin) (Just Thin)
+      width "thin" == BorderWidth (Just Thin) (Just Thin) (Just Thin) (Just Thin)
 
   describe "border-width" $ do
     it "parses 1" $ do
-      parseBorderWidth' "thin" == BorderWidth (Just Thin) Nothing Nothing Nothing
-
-    it "parses 3" $ do
-      parseBorderWidth' "thin thick medium" == BorderWidth (Just Thin) (Just Thick) (Just Medium) Nothing
+      borderWidth "thin" == BorderWidth (Just Thin) Nothing Nothing Nothing
 
     it "parses 4" $ do
-      parseBorderWidth' "thin thick medium thin" == BorderWidth (Just Thin) (Just Thick) (Just Medium) (Just Thin)
+      borderWidth "thin thick medium thin" == BorderWidth (Just Thin) (Just Thick) (Just Medium) (Just Thin)
 
     it "ignores 5th" $ do
-      parseBorderWidth' "thin thick medium thin thick" == BorderWidth (Just Thin) (Just Thick) (Just Medium) (Just Thin)
+      borderWidth "thin thick medium thin thick" == BorderWidth (Just Thin) (Just Thick) (Just Medium) (Just Thin)
+
+    it "ignores unknown" $ do
+      borderWidth "thin thick foo thin" == BorderWidth (Just Thin) (Just Thick) Nothing Nothing
+
 
   describe "border" $ do
     it "parses inherit" $ do
