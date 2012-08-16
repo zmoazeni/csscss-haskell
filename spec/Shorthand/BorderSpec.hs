@@ -12,6 +12,7 @@ parseSingle f = fromJust . f . parse
 width = parseSingle getWidth
 
 borderWidth = fromJust . parseBorderWidth
+borderStyle = fromJust . parseBorderStyle
 
 main = hspec $ do
   describe "border width" $ do
@@ -31,6 +32,18 @@ main = hspec $ do
     it "ignores unknown" $ do
       borderWidth "thin thick foo thin" == BorderWidth (Just Thin) (Just Thick) Nothing Nothing
 
+  describe "border-style" $ do
+    it "parses 1" $ do
+      borderStyle "dashed" == BorderStyle (Just Dashed) Nothing Nothing Nothing
+
+    it "parses 4" $ do
+      borderStyle "dashed double solid groove" == BorderStyle (Just Dashed) (Just Double) (Just Solid) (Just Groove)
+
+    it "ignores 5th" $ do
+      borderStyle "dashed double solid groove solid" == BorderStyle (Just Dashed) (Just Double) (Just Solid) (Just Groove)
+
+    it "ignores unknown" $ do
+      borderStyle "dashed double foo groove" == BorderStyle (Just Dashed) (Just Double) Nothing Nothing
 
   describe "border" $ do
     it "parses inherit" $ do
