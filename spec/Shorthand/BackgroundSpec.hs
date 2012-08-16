@@ -99,10 +99,10 @@ main = hspec $ do
       parsePosition "left top" == Position (LeftPoint, Just TopPoint)
 
     it "parses single %" $ do
-      parsePosition "10%" == Position (HLength (Percent 10), Nothing)
+      parsePosition "10%" == Position (HPercent (Percent 10), Nothing)
 
     it "parses two %" $ do
-      parsePosition "10% 50%" == Position (HLength (Percent 10), Just (VLength (Percent 50)))
+      parsePosition "10% 50%" == Position (HPercent (Percent 10), Just (VPercent (Percent 50)))
 
     it "parses single length" $ do
       parsePosition "10px" == Position (HLength (Length 10 PX), Nothing)
@@ -111,7 +111,7 @@ main = hspec $ do
       parsePosition "10px 5em" == Position (HLength (Length 10 PX), Just (VLength (Length 5 EM)))
 
     it "parses two different" $ do
-      parsePosition "left 10%" == Position (LeftPoint, Just (VLength (Percent 10)))
+      parsePosition "left 10%" == Position (LeftPoint, Just (VPercent (Percent 10)))
 
     it "parses inherit" $ do
       parsePosition "black none repeat fixed inherit" == InheritPosition

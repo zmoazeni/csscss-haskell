@@ -171,14 +171,14 @@ bgPosition :: Parser Position
 bgPosition = points <|> inherit
   where
     points = do
-      h <- asum $ (literalMap <$> hKeywords) ++ (h <$> [percentParser, lengthParser])
-      v <- maybeTry . asum $ (literalMap <$> vKeywords) ++ (v <$> [percentParser, lengthParser])
+      h <- asum $ (literalMap <$> hKeywords) ++ [percentParser' HPercent, lengthParser' HLength]
+      v <- maybeTry . asum $ (literalMap <$> vKeywords) ++ [percentParser' VPercent, lengthParser' VLength]
       return $ Position (h, v)
 
     inherit = literalMap ("inherit", InheritPosition)
 
-    h = liftM HLength
-    v = liftM VLength
+    percentParser' t = t <$> percentParser
+    lengthParser' t = t <$> lengthParser
 
     hKeywords = [ ("left",   LeftPoint)
                 , ("right",  RightPoint)

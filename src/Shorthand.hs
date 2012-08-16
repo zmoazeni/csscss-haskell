@@ -9,6 +9,7 @@ module Shorthand (
   , HorizontalPoint (..)
   , VerticalPoint (..)
   , Position (..)
+  , Percent (..)
   , Length (..)
   , LengthUnit (..)
   , Color (..)

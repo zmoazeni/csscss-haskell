@@ -23,14 +23,17 @@ data LengthUnit = PX | EM | EX | IN | CM | MM | PT | PC
                 deriving (Eq, Show, Ord)
 
 
-data Length = Percent Number | Length {getLength :: Number, getLengthUnit :: LengthUnit}
+data Percent = Percent Number
+             deriving (Eq, Show, Ord)
+
+data Length = Length {getLength :: Number, getLengthUnit :: LengthUnit}
+            deriving (Eq, Show, Ord)
+
+
+data HorizontalPoint = LeftPoint | RightPoint | HCenterPoint | HLength Length | HPercent Percent
            deriving (Eq, Show, Ord)
 
-
-data HorizontalPoint = LeftPoint | RightPoint | HCenterPoint | HLength Length
-           deriving (Eq, Show, Ord)
-
-data VerticalPoint = TopPoint | BottomPoint | VCenterPoint | VLength Length
+data VerticalPoint = TopPoint | BottomPoint | VCenterPoint | VLength Length | VPercent Percent
            deriving (Eq, Show, Ord)
 
 data Position = Position (HorizontalPoint, Maybe VerticalPoint) | InheritPosition
@@ -81,7 +84,7 @@ literalMap (t, v) = literal t v
 maybeTry :: Parser a -> Parser (Maybe a)
 maybeTry p = Just <$> try (p) <|> return Nothing
 
-percentParser :: Parser Length
+percentParser :: Parser Percent
 percentParser = do p <- number
                    symbol "%"
                    return $ Percent p
