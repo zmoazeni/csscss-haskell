@@ -7,6 +7,9 @@ module Shorthand.Border (
 
   , parseBorder
   , borderParser
+
+  , parseBorderWidth
+  , borderWidthParser
 ) where
 
 import Shorthand.Utility
@@ -42,8 +45,19 @@ data BorderWidth = BorderWidth {getTopWidth    :: Maybe Width,
 instance Value Width
 instance Value BorderWidth
 
+
+--
+-- Parse Commands
+--
 parseBorder :: L.Text -> Maybe Border
 parseBorder s = AL.maybeResult $ AL.parse borderParser s
+
+parseBorderWidth :: L.Text -> Maybe BorderWidth
+parseBorderWidth s = AL.maybeResult $ AL.parse borderWidthParser s
+
+--
+-- Parsers
+--
 
 borderParser :: Parser Border
 borderParser = inherit <|> longhand
@@ -56,12 +70,22 @@ borderParser = inherit <|> longhand
                   return $ Border width
 
 
-borderWidth :: Parser BorderWidth
-borderWidth = do w <- widthParser
-                 return $ BorderWidth (Just w) (Just w) (Just w) (Just w)
+widthParser :: Parser Width
+widthParser = asum $ (literalMap <$> keywords)
   where
-    widthParser = asum $ (literalMap <$> keywords)
     keywords = [ ("thin",   Thin)
                , ("medium", Medium)
                , ("thick",  Thick)]
+
+borderWidth :: Parser BorderWidth
+borderWidth = do w <- widthParser
+                 return $ BorderWidth (Just w) (Just w) (Just w) (Just w)
+
+
+borderWidthParser :: Parser BorderWidth
+borderWidthParser = do ws <- many1 widthParser
+                       let (w1:w2:w3:w4:_) = pad (map Just ws)
+                       return $ BorderWidth w1 w2 w3 w4
+  where
+    pad ws = Prelude.take 4 $ ws ++ (repeat Nothing)
 
