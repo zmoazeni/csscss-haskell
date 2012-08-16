@@ -24,15 +24,6 @@ import Data.Text.Lazy as L (Text)
 import Control.Applicative
 import Data.Foldable
 
--- import Prelude hiding (takeWhile)
--- import Data.Char
--- import Control.Monad (liftM)
--- import Data.Text (unpack)
-
--- import Data.Text as T (Text, length)
-
-
-
 data Border = Border {  getWidth :: Maybe BorderWidth
                       , getStyle :: Maybe BorderStyle
                      } | InheritBorder
@@ -93,7 +84,7 @@ borderParser = inherit <|> longhand
 
 
 widthParser :: Parser Width
-widthParser = asum $ (literalMap <$> keywords)
+widthParser = asum $ (literalMap <$> keywords) ++ [WLength <$> lengthParser]
   where
     keywords = [ ("thin",   Thin)
                , ("medium", Medium)

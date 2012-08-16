@@ -6,7 +6,7 @@ where
 import Data.Attoparsec.Text
 import Control.Applicative
 import Data.Text (Text)
-
+import Data.Foldable
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -80,3 +80,23 @@ literalMap (t, v) = literal t v
 
 maybeTry :: Parser a -> Parser (Maybe a)
 maybeTry p = Just <$> try (p) <|> return Nothing
+
+percentParser :: Parser Length
+percentParser = do p <- number
+                   symbol "%"
+                   return $ Percent p
+
+lengthParser :: Parser Length
+lengthParser = do len <- number
+                  unit <- asum $ fmap literalMap units
+                  return $ Length len unit
+  where
+    units = [ ("px", PX)
+            , ("em", EM)
+            , ("ex", EX)
+            , ("in", IN)
+            , ("cm", CM)
+            , ("mm", MM)
+            , ("pt", PT)
+            , ("pc", PC)]
+

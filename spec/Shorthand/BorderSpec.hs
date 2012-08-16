@@ -28,6 +28,9 @@ main = hspec $ do
     it "ignores unknown" $ do
       borderWidth "thin thick foo thin" == BorderWidth (Just Thin) (Just Thick) Nothing Nothing
 
+    it "parses lengths" $ do
+      borderWidth "thin 10px medium 20em" == BorderWidth (Just Thin) (Just (WLength $ Length 10 PX)) (Just Medium) (Just (WLength $ Length 20 EM))
+
   describe "border-style" $ do
     it "parses 1" $ do
       borderStyle "dashed" == BorderStyle (Just Dashed) Nothing Nothing Nothing

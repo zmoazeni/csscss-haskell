@@ -15,14 +15,12 @@ import Data.Attoparsec.Text
 import qualified Data.Attoparsec.Text.Lazy as AL
 import Prelude hiding (takeWhile)
 import Control.Applicative
-import Data.Foldable
 import Data.Char
 import Control.Monad (liftM)
 import Data.Text (unpack)
 import Data.Text.Lazy as L (Text)
 import Data.Text as T (Text, length)
-
-
+import Data.Foldable
 
 data Background = Background {getColor      :: Maybe Color,
                               getImage      :: Maybe Image,
@@ -181,23 +179,6 @@ bgPosition = points <|> inherit
 
     h = liftM HLength
     v = liftM VLength
-
-    percentParser = do p <- number
-                       symbol "%"
-                       return $ Percent p
-
-    lengthParser = do len <- number
-                      unit <- asum $ fmap literalMap units
-                      return $ Length len unit
-
-    units = [ ("px", PX)
-            , ("em", EM)
-            , ("ex", EX)
-            , ("in", IN)
-            , ("cm", CM)
-            , ("mm", MM)
-            , ("pt", PT)
-            , ("pc", PC)]
 
     hKeywords = [ ("left",   LeftPoint)
                 , ("right",  RightPoint)
