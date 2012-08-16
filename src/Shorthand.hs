@@ -4,6 +4,7 @@
 
 module Shorthand (
   module Shorthand.Background
+  , module Shorthand.Border
 
   , HorizontalPoint (..)
   , VerticalPoint (..)
@@ -15,4 +16,5 @@ module Shorthand (
 ) where
 
 import Shorthand.Background
+import Shorthand.Border
 import Shorthand.Utility
