@@ -5,6 +5,7 @@
 module Shorthand (
   module Shorthand.Background
   , module Shorthand.Border
+  , module Shorthand.Font
 
   , HorizontalPoint (..)
   , VerticalPoint (..)
@@ -18,4 +19,5 @@ module Shorthand (
 
 import Shorthand.Background
 import Shorthand.Border
+import Shorthand.Font
 import Shorthand.Utility
