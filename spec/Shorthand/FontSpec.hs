@@ -10,11 +10,19 @@ parse = fromJust . parseFont
 parseSingle f = fromJust . f . parse
 
 style = parseSingle getFontStyle
+variant = parseSingle getFontVariant
 
 main = hspec $ do
   describe "style" $ do
     it "parses italic" $ do
-      style "italic" == Italic
+      style "italic" == ItalicStyle
 
     it "parses inherit" $ do
       style "inherit" == InheritStyle
+
+  describe "variant" $ do
+    it "parses normal" $ do
+      variant "italic normal" == NormalVariant
+
+    it "parses inherit" $ do
+      variant "inherit inherit" == InheritVariant

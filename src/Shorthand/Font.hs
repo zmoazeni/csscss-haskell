@@ -3,6 +3,7 @@
 module Shorthand.Font (
     Font (..)
   , FontStyle (..)
+  , FontVariant (..)
 
   , parseFont
   , fontParser
@@ -17,14 +18,19 @@ import Control.Applicative
 import Data.Foldable
 
 data Font = Font {  getFontStyle :: Maybe FontStyle
-                     }
-            deriving (Eq, Show, Ord)
+                  , getFontVariant :: Maybe FontVariant
+                  }
+          deriving (Eq, Show, Ord)
 
 
-data FontStyle = Normal | Italic | Oblique | InheritStyle
-           deriving (Eq, Show, Ord)
+data FontStyle = NormalStyle | ItalicStyle | ObliqueStyle | InheritStyle
+               deriving (Eq, Show, Ord)
+
+data FontVariant = NormalVariant | SmallCapsVariant | InheritVariant
+                 deriving (Eq, Show, Ord)
 
 instance Value FontStyle
+instance Value FontVariant
 
 
 --
@@ -41,15 +47,20 @@ fontParser :: Parser Font
 fontParser = longhand
   where
     longhand = do style <- maybeTry fontStyle
-                  -- skipSpace
-                  -- style <- maybeTry borderStyle
-                  return $ Font style
+                  skipSpace
+                  variant <- maybeTry fontVariant
+                  return $ Font style variant
 
 
 fontStyle :: Parser FontStyle
-fontStyle = asum $ literalMap <$> keywords
-  where
-    keywords = [ ("normal",  Normal)
-               , ("italic",  Italic)
-               , ("oblique", Oblique)
-               , ("inherit", InheritStyle)]
+fontStyle = symbols [
+    ("normal",  NormalStyle)
+  , ("italic",  ItalicStyle)
+  , ("oblique", ObliqueStyle)
+  , ("inherit", InheritStyle)]
+
+fontVariant :: Parser FontVariant
+fontVariant = symbols [
+    ("normal",     NormalVariant)
+  , ("small-caps", SmallCapsVariant)
+  , ("inherit",    InheritVariant)]

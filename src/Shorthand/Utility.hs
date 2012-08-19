@@ -81,6 +81,10 @@ literal s result = symbol s *> pure result
 literalMap :: Value v => (Text, v) -> Parser v
 literalMap (t, v) = literal t v
 
+symbols :: Value v => [(Text, v)] -> Parser v
+symbols keywords = asum $ literalMap <$> keywords
+
+
 maybeTry :: Parser a -> Parser (Maybe a)
 maybeTry p = Just <$> try (p) <|> return Nothing
 
