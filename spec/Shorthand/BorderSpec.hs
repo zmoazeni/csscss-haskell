@@ -9,40 +9,38 @@ import Data.Maybe
 parse = fromJust . parseBorder
 parseSingle f = fromJust . f . parse
 
-width = parseSingle getWidth
-
-borderWidth = fromJust . parseBorderWidth
-borderStyle = fromJust . parseBorderStyle
+borderWidth = fromJust . parseBorderWidths
+borderStyle = fromJust . parseBorderStyles
 
 main = hspec $ do
   describe "border-width" $ do
     it "parses 1" $ do
-      borderWidth "thin" == BorderWidth (Just Thin) Nothing Nothing Nothing
+      borderWidth "thin" == BorderWidths (Just Thin) Nothing Nothing Nothing
 
     it "parses 4" $ do
-      borderWidth "thin thick medium thin" == BorderWidth (Just Thin) (Just Thick) (Just Medium) (Just Thin)
+      borderWidth "thin thick medium thin" == BorderWidths (Just Thin) (Just Thick) (Just Medium) (Just Thin)
 
     it "ignores 5th" $ do
-      borderWidth "thin thick medium thin thick" == BorderWidth (Just Thin) (Just Thick) (Just Medium) (Just Thin)
+      borderWidth "thin thick medium thin thick" == BorderWidths (Just Thin) (Just Thick) (Just Medium) (Just Thin)
 
     it "ignores unknown" $ do
-      borderWidth "thin thick foo thin" == BorderWidth (Just Thin) (Just Thick) Nothing Nothing
+      borderWidth "thin thick foo thin" == BorderWidths (Just Thin) (Just Thick) Nothing Nothing
 
     it "parses lengths" $ do
-      borderWidth "thin 10px medium 20em" == BorderWidth (Just Thin) (Just (WLength $ Length 10 PX)) (Just Medium) (Just (WLength $ Length 20 EM))
+      borderWidth "thin 10px medium 20em" == BorderWidths (Just Thin) (Just (WLength $ Length 10 PX)) (Just Medium) (Just (WLength $ Length 20 EM))
 
   describe "border-style" $ do
     it "parses 1" $ do
-      borderStyle "dashed" == BorderStyle (Just Dashed) Nothing Nothing Nothing
+      borderStyle "dashed" == BorderStyles (Just Dashed) Nothing Nothing Nothing
 
     it "parses 4" $ do
-      borderStyle "dashed double solid groove" == BorderStyle (Just Dashed) (Just Double) (Just Solid) (Just Groove)
+      borderStyle "dashed double solid groove" == BorderStyles (Just Dashed) (Just Double) (Just Solid) (Just Groove)
 
     it "ignores 5th" $ do
-      borderStyle "dashed double solid groove solid" == BorderStyle (Just Dashed) (Just Double) (Just Solid) (Just Groove)
+      borderStyle "dashed double solid groove solid" == BorderStyles (Just Dashed) (Just Double) (Just Solid) (Just Groove)
 
     it "ignores unknown" $ do
-      borderStyle "dashed double foo groove" == BorderStyle (Just Dashed) (Just Double) Nothing Nothing
+      borderStyle "dashed double foo groove" == BorderStyles (Just Dashed) (Just Double) Nothing Nothing
 
   describe "border" $ do
     it "parses inherit" $ do
@@ -50,5 +48,5 @@ main = hspec $ do
 
     it "parses all" $ do
       parse "thin dashed" == Border
-        (Just (BorderWidth (Just Thin) (Just Thin) (Just Thin) (Just Thin)))
-        (Just (BorderStyle (Just Dashed) (Just Dashed) (Just Dashed) (Just Dashed)))
+        (Just (BorderWidths (Just Thin) (Just Thin) (Just Thin) (Just Thin)))
+        (Just (BorderStyles (Just Dashed) (Just Dashed) (Just Dashed) (Just Dashed)))

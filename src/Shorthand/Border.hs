@@ -3,18 +3,19 @@
 module Shorthand.Border (
     Border (..)
   , BorderWidth (..)
-  , Width (..)
+  , BorderWidths (..)
+
   , BorderStyle (..)
-  , Style (..)
+  , BorderStyles (..)
 
   , parseBorder
   , borderParser
 
-  , parseBorderWidth
-  , borderWidthParser
+  , parseBorderWidths
+  , borderWidthsParser
 
-  , parseBorderStyle
-  , borderStyleParser
+  , parseBorderStyles
+  , borderStylesParser
 ) where
 
 import Shorthand.Utility
@@ -25,36 +26,35 @@ import Control.Applicative
 import Data.Foldable
 import Control.Monad
 
-data Border = Border {  getWidth :: Maybe BorderWidth
-                      , getStyle :: Maybe BorderStyle
+data Border = Border {  getWidth :: Maybe BorderWidths
+                      , getStyle :: Maybe BorderStyles
                      } | InheritBorder
             deriving (Eq, Show, Ord)
 
 
-data Width = Thin | Medium | Thick | WLength Length
-           deriving (Eq, Show, Ord)
-
-data BorderWidth = BorderWidth {getTopWidth    :: Maybe Width,
-                                getRightWidth  :: Maybe Width,
-                                getBottomWidth :: Maybe Width,
-                                getLeftWidth   :: Maybe Width}
+data BorderWidth = Thin | Medium | Thick | WLength Length
                  deriving (Eq, Show, Ord)
 
-data Style = None | Hidden | Dotted | Dashed | Solid | Double | Groove |
-             Ridge | Inset | Outset
-           deriving (Eq, Show, Ord)
+data BorderWidths = BorderWidths {getTopWidth    :: Maybe BorderWidth,
+                                  getRightWidth  :: Maybe BorderWidth,
+                                  getBottomWidth :: Maybe BorderWidth,
+                                  getLeftWidth   :: Maybe BorderWidth}
+                  deriving (Eq, Show, Ord)
 
-data BorderStyle = BorderStyle {getTopStyle    :: Maybe Style,
-                                getRightStyle  :: Maybe Style,
-                                getBottomStyle :: Maybe Style,
-                                getLeftStyle   :: Maybe Style}
+data BorderStyle = None | Hidden | Dotted | Dashed | Solid | Double | Groove |
+                   Ridge | Inset | Outset
                  deriving (Eq, Show, Ord)
 
-instance Value Width
+data BorderStyles = BorderStyles {getTopStyle    :: Maybe BorderStyle,
+                                  getRightStyle  :: Maybe BorderStyle,
+                                  getBottomStyle :: Maybe BorderStyle,
+                                  getLeftStyle   :: Maybe BorderStyle}
+                 deriving (Eq, Show, Ord)
+
 instance Value BorderWidth
-instance Value Style
+instance Value BorderWidths
 instance Value BorderStyle
-
+instance Value BorderStyles
 
 --
 -- Parse Commands
@@ -62,11 +62,11 @@ instance Value BorderStyle
 parseBorder :: L.Text -> Maybe Border
 parseBorder s = AL.maybeResult $ AL.parse borderParser s
 
-parseBorderWidth :: L.Text -> Maybe BorderWidth
-parseBorderWidth s = AL.maybeResult $ AL.parse borderWidthParser s
+parseBorderWidths :: L.Text -> Maybe BorderWidths
+parseBorderWidths s = AL.maybeResult $ AL.parse borderWidthsParser s
 
-parseBorderStyle :: L.Text -> Maybe BorderStyle
-parseBorderStyle s = AL.maybeResult $ AL.parse borderStyleParser s
+parseBorderStyles :: L.Text -> Maybe BorderStyles
+parseBorderStyles s = AL.maybeResult $ AL.parse borderStylesParser s
 
 --
 -- Parsers
@@ -78,32 +78,32 @@ borderParser = inherit <|> longhand
     inherit = do symbol "inherit"
                  endOfInput
                  return InheritBorder
-    longhand = do width <- maybeTry borderWidth
+    longhand = do widths <- maybeTry borderWidths
                   skipSpace
-                  style <- maybeTry borderStyle
-                  return $ Border width style
+                  styles <- maybeTry borderStyles
+                  return $ Border widths styles
 
 
-widthParser :: Parser Width
-widthParser = symbols [
+borderWidthParser :: Parser BorderWidth
+borderWidthParser = symbols [
     ("thin",   Thin)
   , ("medium", Medium)
   , ("thick",  Thick)] `mplus` (WLength <$> lengthParser)
 
-borderWidth :: Parser BorderWidth
-borderWidth = do w <- widthParser
-                 return $ BorderWidth (Just w) (Just w) (Just w) (Just w)
+borderWidths :: Parser BorderWidths
+borderWidths = do w <- borderWidthParser
+                  return $ BorderWidths (Just w) (Just w) (Just w) (Just w)
 
 
-borderWidthParser :: Parser BorderWidth
-borderWidthParser = do ws <- many1 widthParser
-                       let (w1:w2:w3:w4:_) = pad (map Just ws)
-                       return $ BorderWidth w1 w2 w3 w4
+borderWidthsParser :: Parser BorderWidths
+borderWidthsParser = do ws <- many1 borderWidthParser
+                        let (w1:w2:w3:w4:_) = pad (map Just ws)
+                        return $ BorderWidths w1 w2 w3 w4
   where
     pad ws = take 4 $ ws ++ (repeat Nothing)
 
-styleParser :: Parser Style
-styleParser = symbols [
+borderStyleParser :: Parser BorderStyle
+borderStyleParser = symbols [
     ("none",   None)
   , ("hidden", Hidden)
   , ("dotted", Dotted)
@@ -115,14 +115,14 @@ styleParser = symbols [
   , ("inset",  Inset)
   , ("outset", Outset)]
 
-borderStyle :: Parser BorderStyle
-borderStyle = do s <- styleParser
-                 return $ BorderStyle (Just s) (Just s) (Just s) (Just s)
+borderStyles :: Parser BorderStyles
+borderStyles = do s <- borderStyleParser
+                  return $ BorderStyles (Just s) (Just s) (Just s) (Just s)
 
-borderStyleParser :: Parser BorderStyle
-borderStyleParser = do ws <- many1 styleParser
-                       let (w1:w2:w3:w4:_) = pad (map Just ws)
-                       return $ BorderStyle w1 w2 w3 w4
+borderStylesParser :: Parser BorderStyles
+borderStylesParser = do ws <- many1 borderStyleParser
+                        let (w1:w2:w3:w4:_) = pad (map Just ws)
+                        return $ BorderStyles w1 w2 w3 w4
   where
     pad ws = take 4 $ ws ++ (repeat Nothing)
 
