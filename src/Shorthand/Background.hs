@@ -124,9 +124,7 @@ bgColorKeyword = asum $ fmap parseNamedColor namedColors
 -- Images
 --
 bgImage :: Parser Image
-bgImage = bgImageUrl <|> none <|> inherit
-  where none    = literal "none" NoneImage
-        inherit = literal "inherit" InheritImage
+bgImage = bgImageUrl <|> symbols [("none", NoneImage), ("inherit", InheritImage)]
 
 bgImageUrl :: Parser Image
 bgImageUrl = do
@@ -144,25 +142,21 @@ bgImageUrl = do
 -- Repeat
 --
 bgRepeat :: Parser Repeat
-bgRepeat = asum $ fmap literalMap repeats
-  where
-    repeats = [ ("repeat-x",  RepeatX)
-              , ("repeat-y",  RepeatY)
-              , ("no-repeat", NoRepeat)
-              , ("repeat",    Repeat)
-              , ("inherit",   InheritRepeat)
-              ]
+bgRepeat = symbols [
+    ("repeat-x",  RepeatX)
+  , ("repeat-y",  RepeatY)
+  , ("no-repeat", NoRepeat)
+  , ("repeat",    Repeat)
+  , ("inherit",   InheritRepeat)]
 
 --
 -- Attachment
 --
 bgAttachment :: Parser Attachment
-bgAttachment = asum $ fmap literalMap attachments
-  where
-    attachments = [ ("scroll",  Scroll)
-                  , ("fixed",   Fixed)
-                  , ("inherit", InheritAttachment)
-                  ]
+bgAttachment = symbols [
+    ("scroll",  Scroll)
+  , ("fixed",   Fixed)
+  , ("inherit", InheritAttachment)]
 
 --
 -- Position

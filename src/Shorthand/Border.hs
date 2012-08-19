@@ -23,6 +23,7 @@ import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
 import Control.Applicative
 import Data.Foldable
+import Control.Monad
 
 data Border = Border {  getWidth :: Maybe BorderWidth
                       , getStyle :: Maybe BorderStyle
@@ -84,11 +85,10 @@ borderParser = inherit <|> longhand
 
 
 widthParser :: Parser Width
-widthParser = asum $ (literalMap <$> keywords) ++ [WLength <$> lengthParser]
-  where
-    keywords = [ ("thin",   Thin)
-               , ("medium", Medium)
-               , ("thick",  Thick)]
+widthParser = symbols [
+    ("thin",   Thin)
+  , ("medium", Medium)
+  , ("thick",  Thick)] `mplus` (WLength <$> lengthParser)
 
 borderWidth :: Parser BorderWidth
 borderWidth = do w <- widthParser
@@ -103,18 +103,17 @@ borderWidthParser = do ws <- many1 widthParser
     pad ws = take 4 $ ws ++ (repeat Nothing)
 
 styleParser :: Parser Style
-styleParser = asum $ (literalMap <$> keywords)
-  where
-    keywords = [ ("none",   None)
-               , ("hidden", Hidden)
-               , ("dotted", Dotted)
-               , ("dashed", Dashed)
-               , ("solid",  Solid)
-               , ("double", Double)
-               , ("groove", Groove)
-               , ("ridge",  Ridge)
-               , ("inset",  Inset)
-               , ("outset", Outset)]
+styleParser = symbols [
+    ("none",   None)
+  , ("hidden", Hidden)
+  , ("dotted", Dotted)
+  , ("dashed", Dashed)
+  , ("solid",  Solid)
+  , ("double", Double)
+  , ("groove", Groove)
+  , ("ridge",  Ridge)
+  , ("inset",  Inset)
+  , ("outset", Outset)]
 
 borderStyle :: Parser BorderStyle
 borderStyle = do s <- styleParser
