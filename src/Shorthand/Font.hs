@@ -4,6 +4,7 @@ module Shorthand.Font (
     Font (..)
   , FontStyle (..)
   , FontVariant (..)
+  , FontWeight (..)
 
   , parseFont
   , fontParser
@@ -16,9 +17,11 @@ import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
 import Control.Applicative
 import Data.Foldable
+import Control.Monad
 
-data Font = Font {  getFontStyle :: Maybe FontStyle
+data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getFontVariant :: Maybe FontVariant
+                  , getFontWeight  :: Maybe FontWeight
                   }
           deriving (Eq, Show, Ord)
 
@@ -29,8 +32,12 @@ data FontStyle = NormalStyle | ItalicStyle | ObliqueStyle | InheritStyle
 data FontVariant = NormalVariant | SmallCapsVariant | InheritVariant
                  deriving (Eq, Show, Ord)
 
+data FontWeight = NormalWeight | BoldWeight | BolderWeight | LighterWeight | NumberWeight Number | InheritWeight
+                deriving (Eq, Show, Ord)
+
 instance Value FontStyle
 instance Value FontVariant
+instance Value FontWeight
 
 
 --
@@ -49,7 +56,9 @@ fontParser = longhand
     longhand = do style <- maybeTry fontStyle
                   skipSpace
                   variant <- maybeTry fontVariant
-                  return $ Font style variant
+                  skipSpace
+                  weight <- maybeTry fontWeight
+                  return $ Font style variant weight
 
 
 fontStyle :: Parser FontStyle
@@ -64,3 +73,14 @@ fontVariant = symbols [
     ("normal",     NormalVariant)
   , ("small-caps", SmallCapsVariant)
   , ("inherit",    InheritVariant)]
+
+fontWeight :: Parser FontWeight
+fontWeight = symbols [
+    ("normal", NormalWeight)
+  , ("bold", BoldWeight)
+  , ("bolder", BolderWeight)
+  , ("lighter", LighterWeight)
+  , ("inherit", InheritWeight)] `mplus` numberWeight
+
+  where numberWeight = do n <- number
+                          return $ NumberWeight n
