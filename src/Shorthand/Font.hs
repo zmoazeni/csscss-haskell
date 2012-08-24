@@ -6,6 +6,7 @@ module Shorthand.Font (
   , FontVariant (..)
   , FontWeight (..)
   , FontSize (..)
+  , LineHeight (..)
 
   , parseFont
   , fontParser
@@ -24,6 +25,7 @@ data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getFontVariant :: Maybe FontVariant
                   , getFontWeight  :: Maybe FontWeight
                   , getFontSize    :: FontSize
+                  , getLineHeight  :: Maybe LineHeight
                   }
           deriving (Eq, Show, Ord)
 
@@ -40,11 +42,15 @@ data FontWeight = NormalWeight | BoldWeight | BolderWeight | LighterWeight | Num
 data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize | LargerSize | SmallerSize | LengthSize Length | PercentSize Percent | InheritSize
               deriving (Eq, Show, Ord)
 
+data LineHeight = NormalLH | NumberLH Number | LengthLH Length | PercentLH Percent | InheritLH
+                  deriving (Eq, Show, Ord)
+
 
 instance Value FontStyle
 instance Value FontVariant
 instance Value FontWeight
 instance Value FontSize
+instance Value LineHeight
 
 --
 -- Parse Commands
@@ -66,7 +72,9 @@ fontParser = longhand
                   weight <- maybeTry fontWeight
                   skipSpace
                   size <- fontSize
-                  return $ Font style variant weight size
+                  skipSpace
+                  lineHeight' <- maybeTry lineHeight
+                  return $ Font style variant weight size lineHeight'
 
 
 fontStyle :: Parser FontStyle
@@ -113,3 +121,15 @@ fontSize = symbols [
   where
     len = LengthSize <$> lengthParser
     pct = PercentSize <$> percentParser
+
+lineHeight :: Parser LineHeight
+lineHeight = do symbol "/"
+                symbols [
+                    ("normal", NormalLH)
+                  , ("inherit", InheritLH)]
+                  <|> len <|> pct <|> num
+
+  where
+    len = LengthLH <$> lengthParser
+    pct = PercentLH <$> percentParser
+    num = NumberLH <$> number

@@ -12,7 +12,10 @@ parseSingle f = fromJust . f . parse
 style = parseSingle getFontStyle
 variant = parseSingle getFontVariant
 weight = parseSingle getFontWeight
+lineHeight = parseSingle getLineHeight
+
 size = getFontSize . fromJust . parseFont
+
 
 main = hspec $ do
   describe "style" $ do
@@ -55,4 +58,22 @@ main = hspec $ do
     it "parses inherit" $ do
       size "inherit inherit inherit inherit" == InheritSize
 
+  describe "line height" $ do
+    it "parses with space" $ do
+      lineHeight "10px / 12px" == LengthLH (Length 12 PX)
+
+    it "parses without space" $ do
+      lineHeight "10px/15px" == LengthLH (Length 15 PX)
+
+    it "parses normal" $ do
+      lineHeight "10px/normal" == NormalLH
+
+    it "parses percent" $ do
+      lineHeight "10px/44%" == PercentLH (Percent 44)
+
+    it "parses number" $ do
+      lineHeight "10px/44" == NumberLH 44
+
+    it "parses inherit" $ do
+      lineHeight "10px/inherit" == InheritLH
 
