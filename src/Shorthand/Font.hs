@@ -37,7 +37,7 @@ data FontVariant = NormalVariant | SmallCapsVariant | InheritVariant
 data FontWeight = NormalWeight | BoldWeight | BolderWeight | LighterWeight | NumberWeight Number | InheritWeight
                 deriving (Eq, Show, Ord)
 
-data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize | LargerSize | SmallerSize | LengthSize Length | PercentSize Percent
+data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize | LargerSize | SmallerSize | LengthSize Length | PercentSize Percent | InheritSize
               deriving (Eq, Show, Ord)
 
 
@@ -105,7 +105,8 @@ fontSize = symbols [
   , ("smaller",  SmallerSize)
   , ("large",    LargeSize)
   , ("x-large",  XLargeSize)
-  , ("xx-large", XXLargeSize)]
+  , ("xx-large", XXLargeSize)
+  , ("inherit",  InheritSize)]
            `mplus` len
            `mplus` pct
 

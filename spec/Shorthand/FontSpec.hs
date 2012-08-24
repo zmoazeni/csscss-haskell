@@ -52,4 +52,7 @@ main = hspec $ do
     it "parses percent" $ do
       size "44%" == PercentSize (Percent 44)
 
+    it "parses inherit" $ do
+      size "inherit inherit inherit inherit" == InheritSize
+
 
