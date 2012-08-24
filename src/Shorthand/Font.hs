@@ -7,6 +7,7 @@ module Shorthand.Font (
   , FontWeight (..)
   , FontSize (..)
   , LineHeight (..)
+  , FontFamily (..)
 
   , parseFont
   , fontParser
@@ -17,15 +18,18 @@ import Shorthand.Utility
 import Data.Attoparsec.Text hiding (take)
 import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
+import qualified Data.Text as T
 import Control.Applicative
 import Data.Foldable
 import Control.Monad
+import Data.Char
 
 data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getFontVariant :: Maybe FontVariant
                   , getFontWeight  :: Maybe FontWeight
                   , getFontSize    :: FontSize
                   , getLineHeight  :: Maybe LineHeight
+                  , getFontFamily  :: Maybe [FontFamily]
                   }
           deriving (Eq, Show, Ord)
 
@@ -45,12 +49,16 @@ data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | 
 data LineHeight = NormalLH | NumberLH Number | LengthLH Length | PercentLH Percent | InheritLH
                   deriving (Eq, Show, Ord)
 
+data FontFamily = FontName T.Text | SerifName | SansSerifName | CursiveName | FantasyName | MonospaceName | InheritFamily
+                deriving (Eq, Show, Ord)
+
 
 instance Value FontStyle
 instance Value FontVariant
 instance Value FontWeight
 instance Value FontSize
 instance Value LineHeight
+instance Value FontFamily
 
 --
 -- Parse Commands
@@ -74,7 +82,9 @@ fontParser = longhand
                   size <- fontSize
                   skipSpace
                   lineHeight' <- maybeTry lineHeight
-                  return $ Font style variant weight size lineHeight'
+                  skipSpace
+                  families <- maybeTry fontFamilies
+                  return $ Font style variant weight size lineHeight' families
 
 
 fontStyle :: Parser FontStyle
@@ -133,3 +143,32 @@ lineHeight = do symbol "/"
     len = LengthLH <$> lengthParser
     pct = PercentLH <$> percentParser
     num = NumberLH <$> number
+
+fontFamilies :: Parser [FontFamily]
+fontFamilies = inherit <|> families
+  where
+    families = do f <- family
+                  maybeFS <- maybeTry $ many1 otherFamily
+                  case maybeFS of
+                    Just fs -> return (f:fs)
+                    Nothing -> return [f]
+
+    family = generic <|> fontName
+    fontName = qQ <|> q <|> noQ >>= return . FontName
+    otherFamily = do skipSpace
+                     symbol ","
+                     family
+
+    generic = symbols [
+        ("serif", SerifName)
+      , ("san-serif", SansSerifName)
+      , ("cursive", CursiveName)
+      , ("fantasy", FantasyName)
+      , ("monospace", MonospaceName)]
+
+    qQ = doubleQuotes $ takeTill (== '"')
+    q = singleQuotes $ takeTill (== '\'')
+    noQ = takeTill (\x -> x == ',' || isSpace x)
+
+    inherit = do f <- literalMap ("inherit", InheritFamily)
+                 return [f]

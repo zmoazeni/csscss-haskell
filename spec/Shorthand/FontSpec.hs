@@ -13,6 +13,7 @@ style = parseSingle getFontStyle
 variant = parseSingle getFontVariant
 weight = parseSingle getFontWeight
 lineHeight = parseSingle getLineHeight
+family = parseSingle getFontFamily
 
 size = getFontSize . fromJust . parseFont
 
@@ -77,3 +78,25 @@ main = hspec $ do
     it "parses inherit" $ do
       lineHeight "10px/inherit" == InheritLH
 
+
+  describe "font family" $ do
+    it "parses double quoted name" $ do
+      family "10px \"foo\"" == [FontName "foo"]
+
+    it "parses single quoted name" $ do
+      family "10px 'foo'" == [FontName "foo"]
+
+    it "parses unquoted name" $ do
+      family "10px foo" == [FontName "foo"]
+
+    it "parses list" $ do
+      family "10px foo , \"foo2\",'New Century Schoolbook'" == [FontName "foo", FontName "foo2", FontName "New Century Schoolbook"]
+
+    it "parses generic" $ do
+      family "10px serif" == [SerifName]
+
+    it "parses family names and generics list" $ do
+      family "10px serif, \"Times New Roman\", cursive, Lucida, fantasy, \"fantasy\"" == [SerifName, FontName "Times New Roman", CursiveName, FontName "Lucida", FantasyName, FontName "fantasy"]
+
+    it "parses inherit" $ do
+      family "10px inherit" == [InheritFamily]
