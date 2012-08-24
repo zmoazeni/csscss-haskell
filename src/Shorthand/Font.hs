@@ -23,7 +23,7 @@ import Control.Monad
 data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getFontVariant :: Maybe FontVariant
                   , getFontWeight  :: Maybe FontWeight
-                  , getFontSize    :: Maybe FontSize
+                  , getFontSize    :: FontSize
                   }
           deriving (Eq, Show, Ord)
 
@@ -37,7 +37,7 @@ data FontVariant = NormalVariant | SmallCapsVariant | InheritVariant
 data FontWeight = NormalWeight | BoldWeight | BolderWeight | LighterWeight | NumberWeight Number | InheritWeight
                 deriving (Eq, Show, Ord)
 
-data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize | LargerSize | SmallerSize
+data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize | LargerSize | SmallerSize | LengthSize Length | PercentSize Percent
               deriving (Eq, Show, Ord)
 
 
@@ -65,7 +65,7 @@ fontParser = longhand
                   skipSpace
                   weight <- maybeTry fontWeight
                   skipSpace
-                  size <- maybeTry fontSize
+                  size <- fontSize
                   return $ Font style variant weight size
 
 
@@ -84,13 +84,15 @@ fontVariant = symbols [
 
 fontWeight :: Parser FontWeight
 fontWeight = symbols [
-    ("normal", NormalWeight)
-  , ("bold", BoldWeight)
-  , ("bolder", BolderWeight)
+    ("normal",  NormalWeight)
+  , ("bold",    BoldWeight)
+  , ("bolder",  BolderWeight)
   , ("lighter", LighterWeight)
-  , ("inherit", InheritWeight)] `mplus` numberWeight
+  , ("inherit", InheritWeight)]
+             `mplus` numberWeight
 
   where numberWeight = do n <- number
+                          space
                           return $ NumberWeight n
 
 fontSize :: Parser FontSize
@@ -104,3 +106,9 @@ fontSize = symbols [
   , ("large",    LargeSize)
   , ("x-large",  XLargeSize)
   , ("xx-large", XXLargeSize)]
+           `mplus` len
+           `mplus` pct
+
+  where
+    len = LengthSize <$> lengthParser
+    pct = PercentSize <$> percentParser
