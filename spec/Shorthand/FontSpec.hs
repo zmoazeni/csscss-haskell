@@ -42,3 +42,6 @@ main = hspec $ do
   describe "size" $ do
     it "parses absolute value" $ do
       size "x-small" == XSmallSize
+
+    it "parses relative value" $ do
+      size "larger" == LargerSize

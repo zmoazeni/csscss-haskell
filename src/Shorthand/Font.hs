@@ -37,7 +37,7 @@ data FontVariant = NormalVariant | SmallCapsVariant | InheritVariant
 data FontWeight = NormalWeight | BoldWeight | BolderWeight | LighterWeight | NumberWeight Number | InheritWeight
                 deriving (Eq, Show, Ord)
 
-data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize
+data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize | LargerSize | SmallerSize
               deriving (Eq, Show, Ord)
 
 
@@ -96,9 +96,11 @@ fontWeight = symbols [
 fontSize :: Parser FontSize
 fontSize = symbols [
     ("xx-small", XXSmallSize)
-  , ("x-small", XSmallSize)
-  , ("small", SmallSize)
-  , ("medium", MediumSize)
-  , ("large", LargeSize)
-  , ("x-large", XLargeSize)
+  , ("x-small",  XSmallSize)
+  , ("small",    SmallSize)
+  , ("medium",   MediumSize)
+  , ("larger",   LargerSize)
+  , ("smaller",  SmallerSize)
+  , ("large",    LargeSize)
+  , ("x-large",  XLargeSize)
   , ("xx-large", XXLargeSize)]
