@@ -5,6 +5,7 @@ module Shorthand.Font (
   , FontStyle (..)
   , FontVariant (..)
   , FontWeight (..)
+  , FontSize (..)
 
   , parseFont
   , fontParser
@@ -22,6 +23,7 @@ import Control.Monad
 data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getFontVariant :: Maybe FontVariant
                   , getFontWeight  :: Maybe FontWeight
+                  , getFontSize    :: Maybe FontSize
                   }
           deriving (Eq, Show, Ord)
 
@@ -35,10 +37,14 @@ data FontVariant = NormalVariant | SmallCapsVariant | InheritVariant
 data FontWeight = NormalWeight | BoldWeight | BolderWeight | LighterWeight | NumberWeight Number | InheritWeight
                 deriving (Eq, Show, Ord)
 
+data FontSize = XXSmallSize | XSmallSize | SmallSize | MediumSize | LargeSize | XLargeSize | XXLargeSize
+              deriving (Eq, Show, Ord)
+
+
 instance Value FontStyle
 instance Value FontVariant
 instance Value FontWeight
-
+instance Value FontSize
 
 --
 -- Parse Commands
@@ -58,7 +64,9 @@ fontParser = longhand
                   variant <- maybeTry fontVariant
                   skipSpace
                   weight <- maybeTry fontWeight
-                  return $ Font style variant weight
+                  skipSpace
+                  size <- maybeTry fontSize
+                  return $ Font style variant weight size
 
 
 fontStyle :: Parser FontStyle
@@ -84,3 +92,13 @@ fontWeight = symbols [
 
   where numberWeight = do n <- number
                           return $ NumberWeight n
+
+fontSize :: Parser FontSize
+fontSize = symbols [
+    ("xx-small", XXSmallSize)
+  , ("x-small", XSmallSize)
+  , ("small", SmallSize)
+  , ("medium", MediumSize)
+  , ("large", LargeSize)
+  , ("x-large", XLargeSize)
+  , ("xx-large", XXLargeSize)]

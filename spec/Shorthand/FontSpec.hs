@@ -12,6 +12,7 @@ parseSingle f = fromJust . f . parse
 style = parseSingle getFontStyle
 variant = parseSingle getFontVariant
 weight = parseSingle getFontWeight
+size = parseSingle getFontSize
 
 main = hspec $ do
   describe "style" $ do
@@ -37,3 +38,7 @@ main = hspec $ do
 
     it "parses inherit" $ do
       weight "inherit inherit inherit" == InheritWeight
+
+  describe "size" $ do
+    it "parses absolute value" $ do
+      size "x-small" == XSmallSize
