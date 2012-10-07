@@ -7,6 +7,9 @@ import Data.Attoparsec.Text
 import Control.Applicative
 import Data.Text (Text)
 import Data.Foldable
+import Data.Text (unpack)
+import Prelude hiding (takeWhile)
+import Data.Char
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -107,3 +110,14 @@ lengthParser = do len <- number
             , ("pt", PT)
             , ("pc", PC)]
 
+imageUrl :: Parser Image
+imageUrl = do
+  symbol "url"
+  url <- (singleQuoteUrl <|> doubleQuoteUrl <|> noQuoteUrl)
+  return $ Url (unpack url)
+
+  where singleQuoteUrl = parens $ singleQuotes innerUrl
+        doubleQuoteUrl = parens $ doubleQuotes innerUrl
+        noQuoteUrl     = parens innerUrl
+        innerUrl       = takeWhile isUrl
+        isUrl c        = isLetter c || isNumber c || inClass ":/?&." c
