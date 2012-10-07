@@ -14,8 +14,8 @@ variant = parseSingle getFontVariant
 weight = parseSingle getFontWeight
 lineHeight = parseSingle getLineHeight
 family = parseSingle getFontFamily
-
-size = getFontSize . fromJust . parseFont
+size = parseSingle getFontSize
+systemFont = parseSingle getSystemFont
 
 
 main = hspec $ do
@@ -78,7 +78,6 @@ main = hspec $ do
     it "parses inherit" $ do
       lineHeight "10px/inherit" == InheritLH
 
-
   describe "font family" $ do
     it "parses double quoted name" $ do
       family "10px \"foo\"" == [FontName "foo"]
@@ -100,3 +99,10 @@ main = hspec $ do
 
     it "parses inherit" $ do
       family "10px inherit" == [InheritFamily]
+
+  describe "system font" $ do
+    it "parses caption" $ do
+      systemFont "caption" == CaptionFont
+
+    it "parses icon" $ do
+      systemFont "icon" == IconFont

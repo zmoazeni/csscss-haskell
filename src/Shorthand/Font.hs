@@ -8,6 +8,7 @@ module Shorthand.Font (
   , FontSize (..)
   , LineHeight (..)
   , FontFamily (..)
+  , SystemFont (..)
 
   , parseFont
   , fontParser
@@ -27,9 +28,10 @@ import Data.Char
 data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getFontVariant :: Maybe FontVariant
                   , getFontWeight  :: Maybe FontWeight
-                  , getFontSize    :: FontSize
+                  , getFontSize    :: Maybe FontSize
                   , getLineHeight  :: Maybe LineHeight
                   , getFontFamily  :: Maybe [FontFamily]
+                  , getSystemFont  :: Maybe SystemFont
                   }
           deriving (Eq, Show, Ord)
 
@@ -52,6 +54,8 @@ data LineHeight = NormalLH | NumberLH Number | LengthLH Length | PercentLH Perce
 data FontFamily = FontName T.Text | SerifName | SansSerifName | CursiveName | FantasyName | MonospaceName | InheritFamily
                 deriving (Eq, Show, Ord)
 
+data SystemFont = CaptionFont | IconFont | MenuFont | MessageBoxFont | SmallCaptionFont | StatusBarFont
+                deriving (Eq, Show, Ord)
 
 instance Value FontStyle
 instance Value FontVariant
@@ -59,6 +63,7 @@ instance Value FontWeight
 instance Value FontSize
 instance Value LineHeight
 instance Value FontFamily
+instance Value SystemFont
 
 --
 -- Parse Commands
@@ -79,12 +84,17 @@ fontParser = longhand
                   skipSpace
                   weight <- maybeTry fontWeight
                   skipSpace
-                  size <- fontSize
-                  skipSpace
-                  lineHeight' <- maybeTry lineHeight
-                  skipSpace
-                  families <- maybeTry fontFamilies
-                  return $ Font style variant weight size lineHeight' families
+                  try (withFontSize $ Font style variant weight) <|> withoutFontSize
+
+    withFontSize font = do size <- fontSize
+                           skipSpace
+                           lineHeight' <- maybeTry lineHeight
+                           skipSpace
+                           families <- maybeTry fontFamilies
+                           return $ font (Just size) lineHeight' families Nothing
+
+    withoutFontSize = do systemFont' <- systemFont
+                         return $ Font Nothing Nothing Nothing Nothing Nothing Nothing (Just systemFont')
 
 
 fontStyle :: Parser FontStyle
@@ -172,3 +182,12 @@ fontFamilies = inherit <|> families
 
     inherit = do f <- literalMap ("inherit", InheritFamily)
                  return [f]
+
+systemFont :: Parser SystemFont
+systemFont = symbols [
+    ("caption",       CaptionFont)
+  , ("icon",          IconFont)
+  , ("menu",          MenuFont)
+  , ("message-box",   MessageBoxFont)
+  , ("small-caption", SmallCaptionFont)
+  , ("status-bar",    StatusBarFont)]
