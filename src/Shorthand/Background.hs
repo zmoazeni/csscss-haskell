@@ -124,19 +124,7 @@ bgColorKeyword = asum $ fmap parseNamedColor namedColors
 -- Images
 --
 bgImage :: Parser Image
-bgImage = bgImageUrl <|> symbols [("none", NoneImage), ("inherit", InheritImage)]
-
-bgImageUrl :: Parser Image
-bgImageUrl = do
-  symbol "url"
-  url <- (singleQuoteUrl <|> doubleQuoteUrl <|> noQuoteUrl)
-  return $ Url (unpack url)
-
-  where singleQuoteUrl = parens $ singleQuotes innerUrl
-        doubleQuoteUrl = parens $ doubleQuotes innerUrl
-        noQuoteUrl     = parens innerUrl
-        innerUrl       = takeWhile isUrl
-        isUrl c        = isLetter c || isNumber c || inClass ":/?&." c
+bgImage = imageUrl <|> symbols [("none", NoneImage), ("inherit", InheritImage)]
 
 --
 -- Repeat
