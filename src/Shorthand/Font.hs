@@ -32,7 +32,7 @@ data Font = Font {  getFontStyle   :: Maybe FontStyle
                   , getLineHeight  :: Maybe LineHeight
                   , getFontFamily  :: Maybe [FontFamily]
                   , getSystemFont  :: Maybe SystemFont
-                  }
+                  } | InheritFont
           deriving (Eq, Show, Ord)
 
 
@@ -76,8 +76,12 @@ parseFont s = AL.maybeResult $ AL.parse fontParser s
 --
 
 fontParser :: Parser Font
-fontParser = longhand
+fontParser = inherit <|> longhand
   where
+    inherit = do symbol "inherit"
+                 endOfInput
+                 return InheritFont
+
     longhand = do style <- maybeTry fontStyle
                   skipSpace
                   variant <- maybeTry fontVariant

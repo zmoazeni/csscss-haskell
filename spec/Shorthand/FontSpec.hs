@@ -19,6 +19,13 @@ systemFont = parseSingle getSystemFont
 
 
 main = hspec $ do
+  describe "longhand" $ do
+    it "parses longhand" $ do
+      parse "italic bold 36px / 15px 'foo', serif" == Font (Just ItalicStyle) Nothing (Just BoldWeight) (Just $ LengthSize (Length 36 PX)) (Just $ LengthLH (Length 15 PX)) (Just [FontName "foo", SerifName]) Nothing
+
+    it "parses inherit" $ do
+      parse "inherit" == InheritFont
+
   describe "style" $ do
     it "parses italic" $ do
       style "italic small" == ItalicStyle
