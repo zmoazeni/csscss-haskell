@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.BackgroundSpec (main) where
+module Shorthand.BackgroundSpec (main, spec) where
 
 import Test.Hspec
 import Shorthand
@@ -17,7 +17,9 @@ parseRepeat     = parseSingle getRepeat
 parseAttachment = parseSingle getAttachment
 parsePosition   = parseSingle getPosition
 
-main = hspec $ do
+main = hspec spec
+
+spec = describe "background spec" $ do
   describe "background" $ do
     it "parses inherit background" $ do
       parse "inherit" == InheritBackground

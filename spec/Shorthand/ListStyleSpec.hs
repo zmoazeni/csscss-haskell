@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.ListStyleSpec (main) where
+module Shorthand.ListStyleSpec (main, spec) where
 
 import Test.Hspec
 import Shorthand
@@ -13,7 +13,9 @@ lsType     = parseSingle getListStyleType
 lsPosition = parseSingle getListStylePosition
 lsImage    = parseSingle getListStyleImage
 
-main = hspec $ do
+main = hspec spec
+
+spec = describe "list style" $ do
   describe "longhand" $ do
     it "parses longhand" $ do
       parse "disc outside none" == ListStyle (Just DiscLSType) (Just OutsideLSPos) (Just NoneImage)

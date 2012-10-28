@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.BorderSpec (main) where
+module Shorthand.BorderSpec (main, spec) where
 
 import Test.Hspec
 import Shorthand
@@ -12,7 +12,9 @@ parseSingle f = fromJust . f . parse
 borderWidth = fromJust . parseBorderWidths
 borderStyle = fromJust . parseBorderStyles
 
-main = hspec $ do
+main = hspec spec
+
+spec = describe "border spec" $ do
   describe "border-width" $ do
     it "parses 1" $ do
       borderWidth "thin" == BorderWidths (Just Thin) Nothing Nothing Nothing
