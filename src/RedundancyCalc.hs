@@ -2,35 +2,39 @@
 
 module RedundancyCalc where
 
-import Data.Text hiding (map, zip, foldr, length)
+import Data.Text hiding (map, zip, foldr, length, head)
 import Data.List
 
 import Rulesets
 
+data Match = Match {getMId       :: Integer,
+                    getMSelector :: Text,
+                    getMRules    :: [Rule]}
+           deriving (Show, Eq, Ord)
 
-type Match = [Text]
+data MatchResult = MatchResult {getMRSelectors :: [Text],
+                                getMRRules     :: [Rule]}
+                 deriving (Show, Eq, Ord)
 
-data RedundancyResult = RedundancyResult {get100 :: [Match]}
-                      deriving (Show, Eq, Ord)
+type IndexedRuleset = (Integer, Ruleset)
 
-
-similarities :: [Ruleset] -> RedundancyResult
-similarities rulesets = RedundancyResult $ map getSelectors duplicates
+matches :: [Ruleset] -> [MatchResult]
+matches rulesets = map wrapMatchResult reducedResults
   where
-    duplicates = unique $ map (snd . check100) indexedRulesets
+    wrapMatchResult (_, ms) = MatchResult (map (getSelector . snd) ms) (head $ map (getRules .snd) ms)
+    reducedResults = reduce $ map match indexedRulesets
 
-    getSelectors = sort . map (getSelector . snd)
+    reduce = nubBy indexes . foldr atLeastTwo []
+    indexes (_, ms1) (_, ms2) = (sort $ map fst ms1) == (sort $ map fst ms2)
+    atLeastTwo item@(r, rs) ms = if (length rs) > 1 then item:ms else ms
+
+    match iRulesetToCheck@(index, ruleset) = foldr matcher (ruleset, [iRulesetToCheck]) (otherIndexedRulesets index)
+
+    matcher iRuleset@(_, ruleset) iRulesetCheck@(checkRuleset, indexedRulesets) = if getRules ruleset == getRules checkRuleset then
+                                                                                    (checkRuleset, iRuleset:indexedRulesets)
+                                                                                  else
+                                                                                    iRulesetCheck
+
+    otherIndexedRulesets skipIndex = [(index, ruleset) | (index, ruleset) <- indexedRulesets, index /= skipIndex]
     indexedRulesets = zip [0..] (map sortRuleset rulesets)
-
-    check100 rulesetToCheck@(index, ruleset) = foldr checkDuplicateRulesets (ruleset, [rulesetToCheck]) (rulesetsWithoutIndex index)
-
-    rulesetsWithoutIndex index = [(i, ruleset) | (i, ruleset) <- indexedRulesets, i /= index]
-
-    checkDuplicateRulesets indexedRuleset@(_, ruleset) checkTuple@(checkRuleset, rs) = if getRules ruleset == getRules checkRuleset then
-                                                                                         (checkRuleset, indexedRuleset:rs)
-                                                                                       else
-                                                                                         checkTuple
     sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getRules ruleset)
-
-    unique indexedRs = nubBy (\rs1 rs2 -> sort(map fst rs1) == sort(map fst rs2)) [rs | rs <- indexedRs, length rs > 1]
-
