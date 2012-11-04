@@ -2,7 +2,7 @@
 
 module RedundancyCalc where
 
-import Data.Text hiding (map, zip, foldr, length, head)
+import Data.Text (Text)
 import Data.List
 
 import Rulesets
@@ -18,23 +18,28 @@ data MatchResult = MatchResult {getMRSelectors :: [Text],
 
 type IndexedRuleset = (Integer, Ruleset)
 
-matches :: [Ruleset] -> [MatchResult]
-matches rulesets = map wrapMatchResult reducedResults
+matches :: [Ruleset] -> [(Ruleset, [Match])]
+matches rulesets = reduce $ map match indexedRulesets
   where
-    wrapMatchResult (_, ms) = MatchResult (map (getSelector . snd) ms) (head $ map (getRules .snd) ms)
-    reducedResults = reduce $ map match indexedRulesets
-
     reduce = nubBy indexes . foldr atLeastTwo []
-    indexes (_, ms1) (_, ms2) = (sort $ map fst ms1) == (sort $ map fst ms2)
+    indexes (_, ms1) (_, ms2) = (sort $ map getMId ms1) == (sort $ map getMId ms2)
     atLeastTwo item@(r, rs) ms = if (length rs) > 1 then item:ms else ms
 
-    match iRulesetToCheck@(index, ruleset) = foldr matcher (ruleset, [iRulesetToCheck]) (otherIndexedRulesets index)
+    match (index, ruleset) = foldr matcher (ruleset, []) (otherIndexedRulesets index)
 
-    matcher iRuleset@(_, ruleset) iRulesetCheck@(checkRuleset, indexedRulesets) = if getRules ruleset == getRules checkRuleset then
-                                                                                    (checkRuleset, iRuleset:indexedRulesets)
-                                                                                  else
-                                                                                    iRulesetCheck
 
     otherIndexedRulesets skipIndex = [(index, ruleset) | (index, ruleset) <- indexedRulesets, index /= skipIndex]
     indexedRulesets = zip [0..] (map sortRuleset rulesets)
     sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getRules ruleset)
+
+matcher :: IndexedRuleset -> (Ruleset, [Match]) -> (Ruleset, [Match])
+matcher iRuleset@(index, ruleset) iRulesetCheck@(checkRuleset, matches) = if (null sameRules) then
+                                                                            iRulesetCheck
+                                                                          else
+                                                                            (checkRuleset, match:matches)
+
+  where
+    sameRules = filter (\r -> r `elem` rules) checkRules
+    rules = getRules ruleset
+    checkRules = getRules checkRuleset
+    match = Match index (getSelector ruleset) sameRules
