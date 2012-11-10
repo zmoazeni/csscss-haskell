@@ -58,17 +58,25 @@ printHelp progName = do
   where
     header = "Usage: " ++ progName ++ " [OPTION...] cssfile"
 
+printVersion progName = do
+  putStrLn $ progName ++ " version 0.0.1"
+  exitWith ExitSuccess
+
 main :: IO ()
 main = do
   progName <- getProgName
   (args, files) <- getArgs >>= parseOpts progName
-  if (optShowHelp args) || null files
-    then printHelp progName
-    else do
-      errorOrRules <- parseFile files
-      case errorOrRules of
-        Left e   -> printParseError e
-        Right rs -> putStrLn $ render (displayRulesets (fromJust $ optNum args) rs)
+
+  when (optShowVersion args) $ printVersion progName
+  when ((optShowHelp args) || null files) $ printHelp progName
+
+  errorOrRules <- parseFile files
+  case errorOrRules of
+    Left e   -> printParseError e
+    Right rs -> do
+      let min = fromJust (optNum args)
+          output = render (displayRulesets min rs)
+      putStrLn output
 
   where
     parseFile :: [String] -> IO (Either String [(Text, [(Text, Text)])])
