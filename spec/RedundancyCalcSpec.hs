@@ -6,7 +6,7 @@ import Test.Hspec
 import Rulesets
 import RedundancyCalc
 
-rain = hspec spec
+main = hspec spec
 
 spec = describe "redundancy calc" $ do
   describe "matches" $ do
