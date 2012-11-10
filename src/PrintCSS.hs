@@ -38,7 +38,7 @@ displayRulesets rawRulesets = do let rulesets = map buildRuleset rawRulesets
   where
     format (ruleset, rulesetMatches) = map eachMatch rulesetMatches
       where
-        eachMatch rulesetMatch = do let r1 = unpack $ getSelector ruleset
+        eachMatch rulesetMatch = do let r1 = unpack $ getSelector (snd ruleset)
                                         r2 = unpack $ getMSelector rulesetMatch
                                         num = length $ getMRules rulesetMatch
                                         singOrPlural = if num > 1 then "rules" else "rule" :: String
