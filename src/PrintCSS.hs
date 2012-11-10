@@ -33,15 +33,15 @@ main = do
 
 displayRulesets :: [RawRuleset] -> Doc
 displayRulesets rawRulesets = do let rulesets = map buildRuleset rawRulesets
-                                     redundantRulesets = take 3 $ findMatches rulesets
-                                 vcat $ concat (map format redundantRulesets)
+                                     -- redundantRulesets = take 10 $ (nubMatches . groupMatches) (findMatches rulesets)
+                                     -- redundantRulesets = groupMatches (findMatches rulesets)
+                                     redundantRulesets = compactMatches 2 (findMatches rulesets)
+                                 vcat (map format redundantRulesets)
   where
-    format (ruleset, matches) = map eachMatch matches
-      where
-        eachMatch rulesetMatch = do let r1 = unpack $ getSelector (snd ruleset)
-                                        r2 = unpack $ getMSelector rulesetMatch
-                                        num = length $ getMRules rulesetMatch
-                                        singOrPlural = if num > 1 then "rules" else "rule" :: String
-                                        s = printf "{%s} and {%s} share %d %s" r1 r2 num singOrPlural
-                                    text s
+    format (ruleset, match) = do let r1 = unpack $ getSelector (snd ruleset)
+                                     r2 = unpack $ getMSelector match
+                                     num = length $ getMRules match
+                                     singOrPlural = if num > 1 then "rules" else "rule" :: String
+                                     s = printf "{%s} and {%s} share %d %s" r1 r2 num singOrPlural
+                                 text s
 

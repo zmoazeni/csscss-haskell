@@ -44,3 +44,23 @@ matcher iRuleset@(index, ruleset) iRulesetCheck@(checkRuleset, matches) = if (nu
     rules = getRules ruleset
     checkRules = getRules (snd checkRuleset)
     match = Match index (getSelector ruleset) sameRules
+
+groupMatches :: [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]
+groupMatches matches = concat $ map pairEach matches
+  where
+    pairEach (indexedRuleset, matches) = map (\match -> (indexedRuleset, match)) matches
+
+
+nubMatches :: [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]
+nubMatches pairs = nubBy nubber pairs
+  where
+    nubber ((i1, _), (Match m1 _ _)) ((i2, _), (Match m2 _ _)) = i1 == m2 && m1 == i2
+
+reduceMatches :: Int -> [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]
+reduceMatches num matches = sortBy matchTotal $ filter matchLength matches
+  where
+    matchLength (_, match) = length (getMRules match) >= num
+    matchTotal (_, m1) (_, m2) = length (getMRules m2) `compare` length (getMRules m1)
+
+compactMatches :: Int -> [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]
+compactMatches num pairs = reduceMatches num . nubMatches . groupMatches $ pairs
