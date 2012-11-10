@@ -65,17 +65,16 @@ printVersion progName = do
 main :: IO ()
 main = do
   progName <- getProgName
-  (args, files) <- getArgs >>= parseOpts progName
+  (opts, files) <- getArgs >>= parseOpts progName
 
-  when (optShowVersion args) $ printVersion progName
-  when ((optShowHelp args) || null files) $ printHelp progName
+  when (optShowVersion opts) $ printVersion progName
+  when ((optShowHelp opts) || null files) $ printHelp progName
 
   errorOrRules <- parseFile files
   case errorOrRules of
     Left e   -> printParseError e
     Right rs -> do
-      let min = fromJust (optNum args)
-          output = render (displayRulesets min rs)
+      let output = render (displayRulesets opts rs)
       putStrLn output
 
   where
@@ -86,16 +85,26 @@ main = do
     printParseError error = putStrLn $ "Error parsing css: " ++ error
 
 
-displayRulesets :: Int -> [RawRuleset] -> Doc
-displayRulesets num rawRulesets = do
+displayRulesets :: Options -> [RawRuleset] -> Doc
+displayRulesets opts rawRulesets = do
   let rulesets = map buildRuleset rawRulesets
-      redundantRulesets = compactMatches num (findMatches rulesets)
+      min = fromJust (optNum opts)
+      redundantRulesets = compactMatches min (findMatches rulesets)
   vcat (map format redundantRulesets)
   where
     format (ruleset, match) = do let r1 = unpack $ getSelector (snd ruleset)
                                      r2 = unpack $ getMSelector match
-                                     num = length $ getMRules match
+                                     rules = getMRules match
+                                     num = length rules
+                                     verbose = optVerbose opts
                                      singOrPlural = if num > 1 then "rules" else "rule" :: String
                                      s = printf "{%s} and {%s} share %d %s" r1 r2 num singOrPlural
-                                 text s
+                                 if verbose
+                                   then text s $+$ vcat (map formatSharedRule rules)
+                                   else text s
+
+    formatSharedRule rule = do let prop = unpack $ getProperty rule
+                                   val = unpack $ getValue rule
+                                   r = printf "- %s:%s;" prop val
+                               nest 2 (text r)
 
