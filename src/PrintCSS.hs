@@ -33,10 +33,10 @@ main = do
 
 displayRulesets :: [RawRuleset] -> Doc
 displayRulesets rawRulesets = do let rulesets = map buildRuleset rawRulesets
-                                     redundantRulesets = take 3 $ matches rulesets
+                                     redundantRulesets = take 3 $ findMatches rulesets
                                  vcat $ concat (map format redundantRulesets)
   where
-    format (ruleset, rulesetMatches) = map eachMatch rulesetMatches
+    format (ruleset, matches) = map eachMatch matches
       where
         eachMatch rulesetMatch = do let r1 = unpack $ getSelector (snd ruleset)
                                         r2 = unpack $ getMSelector rulesetMatch

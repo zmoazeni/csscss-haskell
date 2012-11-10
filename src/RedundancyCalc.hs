@@ -19,8 +19,8 @@ data MatchResult = MatchResult {getMRSelectors :: [Text],
 
 type IndexedRuleset = (Integer, Ruleset)
 
-matches :: [Ruleset] -> [(IndexedRuleset, [Match])]
-matches rulesets = reduce $ map match indexedRulesets
+findMatches :: [Ruleset] -> [(IndexedRuleset, [Match])]
+findMatches rulesets = reduce $ map match indexedRulesets
   where
     reduce = nubBy indexes . foldr atLeastTwo []
     indexes (_, ms1) (_, ms2) = (sort $ map getMId ms1) == (sort $ map getMId ms2)
