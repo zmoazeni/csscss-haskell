@@ -56,7 +56,7 @@ printHelp progName = do
   putStr (usageInfo header options)
   exitWith ExitSuccess
   where
-    header = "Usage: " ++ progName ++ " [OPTION...] cssfile"
+    header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
 
 printVersion progName = do
   putStrLn $ progName ++ " version 0.0.1"
@@ -70,7 +70,7 @@ main = do
   when (optShowVersion opts) $ printVersion progName
   when ((optShowHelp opts) || null files) $ printHelp progName
 
-  errorOrRules <- parseFile files
+  errorOrRules <- parseFiles files
   case errorOrRules of
     Left e   -> printParseError e
     Right rs -> do
@@ -78,9 +78,8 @@ main = do
       putStrLn output
 
   where
-    parseFile :: [String] -> IO (Either String [(Text, [(Text, Text)])])
-    parseFile (filePath:_) = do contents <- readFile filePath
-                                return $ parseBlocks (pack contents)
+    parseFiles filePaths = do contents <- fmap concat $ mapM readFile filePaths
+                              return $ parseBlocks (pack contents)
 
     printParseError error = putStrLn $ "Error parsing css: " ++ error
 
