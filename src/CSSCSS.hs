@@ -62,7 +62,7 @@ printHelp progName = do
   putStr (usageInfo header options)
   exitWith ExitSuccess
   where
-    header = "Usage: " ++ progName ++ " [OPTION...] cssfile"
+    header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
 
 printVersion progName = do
   putStrLn $ progName ++ " version 0.0.1"
