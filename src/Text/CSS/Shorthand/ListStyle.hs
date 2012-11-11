@@ -14,11 +14,7 @@ import Text.CSS.Shorthand.Utility
 import Data.Attoparsec.Text hiding (take)
 import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
-import qualified Data.Text as T
 import Control.Applicative
-import Data.Foldable
-import Control.Monad
-import Data.Char
 
 data ListStyle = ListStyle { getListStyleType     :: Maybe ListStyleType
                            , getListStylePosition :: Maybe ListStylePosition

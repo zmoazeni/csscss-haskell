@@ -1,5 +1,6 @@
 files = FileList["src/*.hs"]
-compile_cmd = "ghc -outputdir bin -isrc -Wall #{ENV['GHC_OPTS']}".strip
+compile_cmd = "ghc -outputdir bin -isrc -Wall -fno-warn-unused-do-bind #{ENV['GHC_OPTS']}".strip
+main_file = "CSSCSS"
 
 files.each do |f|
   o_file = f.pathmap("%{^src/bin}X.o")
@@ -8,7 +9,7 @@ files.each do |f|
   end
 end
 
-file "bin/Main.o" => files.dup.exclude(/Main\.hs/).pathmap("%{^src/bin}X.o")
+file "bin/#{main_file}.o" => files.dup.exclude(/#{main_file}\.hs/).pathmap("%{^src/bin}X.o")
 
 desc "Compile srcs"
 task :compile => files.pathmap("%{^src/bin}X.o")
@@ -22,7 +23,7 @@ end
 namespace :clean do
   desc "Clean the compiled objects"
   task :src do
-    sh "rm -rf ./bin ./src/Main"
+    sh "rm -rf ./bin ./src/#{main_file}"
   end
 
   desc "Clean compiled dist"

@@ -21,10 +21,11 @@ source-repository head
 executable csscss
   main-is:         CSSCSS.hs
   hs-source-dirs:  src
-  ghc-options:     -Wall
+  ghc-options:     -Wall -fno-warn-unused-do-bind
   build-depends:   base >= 3 && < 5,
                    css-text >= 0.1,
                    json >= 0.5,
                    text >= 0.11,
-                   pretty >= 1.1
+                   pretty >= 1.1,
+                   attoparsec >= 0.10
 

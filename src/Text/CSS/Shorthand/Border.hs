@@ -23,7 +23,6 @@ import Data.Attoparsec.Text hiding (take)
 import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
 import Control.Applicative
-import Data.Foldable
 import Control.Monad
 
 data Border = Border {  getWidth :: Maybe BorderWidths

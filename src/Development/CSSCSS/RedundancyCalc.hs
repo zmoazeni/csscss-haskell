@@ -6,6 +6,7 @@ import Data.Text (Text)
 import Data.List
 
 import Development.CSSCSS.Rulesets
+import Text.CSS.Shorthand
 
 data Match = Match {getMId       :: Integer,
                     getMSelector :: Text,
@@ -24,20 +25,19 @@ findMatches rulesets = reduce $ map match indexedRulesets
   where
     reduce = nubBy indexes . foldr atLeastTwo []
     indexes (_, ms1) (_, ms2) = (sort $ map getMId ms1) == (sort $ map getMId ms2)
-    atLeastTwo item@(r, rs) ms = if (length rs) > 1 then item:ms else ms
+    atLeastTwo item@(_, rs) ms = if (length rs) > 1 then item:ms else ms
 
-    match ir@(index, ruleset) = foldr matcher (ir, []) (otherIndexedRulesets index)
+    match ir@(index, _) = foldr matcher (ir, []) (otherIndexedRulesets index)
 
 
-    otherIndexedRulesets skipIndex = [ir | ir@(index, ruleset) <- indexedRulesets, index /= skipIndex]
+    otherIndexedRulesets skipIndex = [ir | ir@(index, _) <- indexedRulesets, index /= skipIndex]
     indexedRulesets = zip [0..] (map sortRuleset rulesets)
     sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getRules ruleset)
 
 matcher :: IndexedRuleset -> (IndexedRuleset, [Match]) -> (IndexedRuleset, [Match])
-matcher iRuleset@(index, ruleset) iRulesetCheck@(checkRuleset, matches) = if (null sameRules) then
-                                                                            iRulesetCheck
-                                                                          else
-                                                                            (checkRuleset, match:matches)
+matcher (index, ruleset) iRulesetCheck@(checkRuleset, matches) = if (null sameRules)
+                                                                   then iRulesetCheck
+                                                                   else (checkRuleset, match:matches)
 
   where
     sameRules = filter (\r -> r `elem` rules) checkRules
@@ -48,7 +48,7 @@ matcher iRuleset@(index, ruleset) iRulesetCheck@(checkRuleset, matches) = if (nu
 groupMatches :: [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]
 groupMatches matches = concat $ map pairEach matches
   where
-    pairEach (indexedRuleset, matches) = map (\match -> (indexedRuleset, match)) matches
+    pairEach (indexedRuleset, matches') = map (\match -> (indexedRuleset, match)) matches'
 
 
 nubMatches :: [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]

@@ -21,7 +21,6 @@ import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
 import qualified Data.Text as T
 import Control.Applicative
-import Data.Foldable
 import Control.Monad
 import Data.Char
 

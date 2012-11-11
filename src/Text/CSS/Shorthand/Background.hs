@@ -16,7 +16,6 @@ import qualified Data.Attoparsec.Text.Lazy as AL
 import Prelude hiding (takeWhile)
 import Control.Applicative
 import Data.Char
-import Control.Monad (liftM)
 import Data.Text (unpack)
 import Data.Text.Lazy as L (Text)
 import Data.Text as T (Text, length)
@@ -52,12 +51,12 @@ backgroundParser = inherit <|> longhand
                   skipSpace
                   image <- maybeTry bgImage
                   skipSpace
-                  repeat <- maybeTry bgRepeat
+                  repeat' <- maybeTry bgRepeat
                   skipSpace
                   attachment <- maybeTry bgAttachment
                   skipSpace
                   position <- maybeTry bgPosition
-                  return $ Background color image repeat attachment position
+                  return $ Background color image repeat' attachment position
 
 
 --
@@ -101,7 +100,7 @@ rgbParams p = parens $ do
 bgColorKeyword :: Parser Color
 bgColorKeyword = asum $ fmap parseNamedColor namedColors
   where
-    parseNamedColor (name, hexColor) = stringCI name *> pure (Hex hexColor)
+    parseNamedColor (name, hexColor') = stringCI name *> pure (Hex hexColor')
     namedColors = [ ("black",   "000000")
                   , ("silver",  "c0c0c0")
                   , ("gray",    "808080")

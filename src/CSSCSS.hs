@@ -4,7 +4,7 @@ module Main (main) where
 import System.Environment (getArgs, getProgName)
 import System.Exit
 import Text.CSS.Parse
-import Data.Text (Text, pack, unpack)
+import Data.Text (pack, unpack)
 import Text.PrettyPrint
 import Text.Printf
 import System.Console.GetOpt
@@ -23,6 +23,7 @@ data Options = Options
  , optJSON        :: Bool
  } deriving Show
 
+defaultOptions :: Options
 defaultOptions    = Options
  { optVerbose     = False
  , optShowVersion = False
@@ -58,12 +59,14 @@ parseOpts progName argv =
         putStr $ concat errs
         printHelp progName
 
+printHelp :: String -> IO a
 printHelp progName = do
   putStr (usageInfo header options)
   exitWith ExitSuccess
   where
     header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
 
+printVersion :: String -> IO a
 printVersion progName = do
   putStrLn $ progName ++ " version 0.0.1"
   exitWith ExitSuccess
@@ -88,7 +91,7 @@ main = do
     parseFiles filePaths = do contents <- fmap concat $ mapM readFile filePaths
                               return $ parseBlocks (pack contents)
 
-    printParseError error = putStrLn $ "Error parsing css: " ++ error
+    printParseError e = putStrLn $ "Error parsing css: " ++ e
 
 
 printRulesets :: Options -> [(IndexedRuleset, Match)] -> Doc
@@ -126,5 +129,5 @@ jsonRulesets opts redundantRulesets = encode (map toJSON redundantRulesets)
 findRedundancies :: Options -> [RawRuleset] -> [(IndexedRuleset, Match)]
 findRedundancies opts rawRulesets = do
   let rulesets = map buildRuleset rawRulesets
-      min = fromJust (optNum opts)
-  compactMatches min (findMatches rulesets)
+      min' = fromJust (optNum opts)
+  compactMatches min' (findMatches rulesets)
