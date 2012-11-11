@@ -72,7 +72,7 @@ hexColor = do symbol "#"
               rawRGB <- takeWhile $ inClass "a-fA-F0-9"
               let rgb = expandRGB rawRGB (T.length rawRGB)
               return (Hex rgb)
-  where expandRGB xs 3 = Prelude.concat $ map (\x -> [x, x]) (unpack xs)
+  where expandRGB xs 3 = Prelude.concatMap (\x -> [x, x]) (unpack xs)
         expandRGB xs _ = unpack xs
 
 rgbColor :: Parser Color

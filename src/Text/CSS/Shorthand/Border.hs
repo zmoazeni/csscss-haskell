@@ -99,7 +99,7 @@ borderWidthsParser = do ws <- many1 borderWidthParser
                         let (w1:w2:w3:w4:_) = pad (map Just ws)
                         return $ BorderWidths w1 w2 w3 w4
   where
-    pad ws = take 4 $ ws ++ (repeat Nothing)
+    pad ws = take 4 $ ws ++ repeat Nothing
 
 borderStyleParser :: Parser BorderStyle
 borderStyleParser = symbols [
@@ -123,5 +123,5 @@ borderStylesParser = do ws <- many1 borderStyleParser
                         let (w1:w2:w3:w4:_) = pad (map Just ws)
                         return $ BorderStyles w1 w2 w3 w4
   where
-    pad ws = take 4 $ ws ++ (repeat Nothing)
+    pad ws = take 4 $ ws ++ repeat Nothing
 

@@ -34,19 +34,19 @@ defaultOptions    = Options
 
 options :: [OptDescr (Options -> Options)]
 options =
- [ Option ['v'] ["verbose"]
+ [ Option "v" ["verbose"]
      (NoArg (\ opts -> opts { optVerbose = True }))
      "Print each shared rule."
- , Option ['V'] ["version"]
+ , Option "V" ["version"]
      (NoArg (\ opts -> opts { optShowVersion = True }))
      "Show version number."
- , Option ['n'] ["num"]
+ , Option "n" ["num"]
      (OptArg ((\num opts -> opts { optNum = Just num }) . read . fromMaybe "3") "NUM")
      "Print selectors that match at least NUM times. Defaults 3."
- , Option ['j'] ["json"]
+ , Option "j" ["json"]
      (NoArg (\ opts -> opts { optJSON = True }))
      "Format output in JSON"
- , Option ['h', 'H'] ["help"]
+ , Option "hH" ["help"]
      (NoArg (\ opts -> opts { optShowHelp = True }))
      "Display this help message."
  ]
@@ -62,14 +62,14 @@ parseOpts progName argv =
 printHelp :: String -> IO a
 printHelp progName = do
   putStr (usageInfo header options)
-  exitWith ExitSuccess
+  exitSuccess
   where
     header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
 
 printVersion :: String -> IO a
 printVersion progName = do
   putStrLn $ progName ++ " version 0.0.1"
-  exitWith ExitSuccess
+  exitSuccess
 
 main :: IO ()
 main = do
@@ -77,14 +77,14 @@ main = do
   (opts, files) <- getArgs >>= parseOpts progName
 
   when (optShowVersion opts) $ printVersion progName
-  when ((optShowHelp opts) || null files) $ printHelp progName
+  when (optShowHelp opts || null files) $ printHelp progName
 
   errorOrRules <- parseFiles files
   case errorOrRules of
     Left e   -> printParseError e
     Right rs -> do
       let redundancies = findRedundancies opts rs
-          output = if (optJSON opts) then (jsonRulesets opts redundancies) else render (printRulesets opts redundancies)
+          output = if optJSON opts then jsonRulesets opts redundancies else render (printRulesets opts redundancies)
       putStrLn output
 
   where
@@ -95,8 +95,7 @@ main = do
 
 
 printRulesets :: Options -> [(IndexedRuleset, Match)] -> Doc
-printRulesets opts redundantRulesets = do
-  vcat (map format redundantRulesets)
+printRulesets opts redundantRulesets = vcat (map format redundantRulesets)
   where
     format (ruleset, match) = do let r1 = unpack $ getSelector (snd ruleset)
                                      r2 = unpack $ getMSelector match
@@ -123,7 +122,7 @@ jsonRulesets opts redundantRulesets = encode (map toJSON redundantRulesets)
                                          rules = getMRules match
                                          num = length rules
                                          verbose = optVerbose opts
-                                         formattedRules = if verbose then [("rules", showJSON (map formatSharedRule rules))] else []
+                                         formattedRules = [("rules", showJSON (map formatSharedRule rules)) | verbose]
                                      makeObj $ [("selectors", showJSON [r1, r2]), ("count", showJSON num)] ++ formattedRules
 
 findRedundancies :: Options -> [RawRuleset] -> [(IndexedRuleset, Match)]

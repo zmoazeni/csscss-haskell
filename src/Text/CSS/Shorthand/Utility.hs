@@ -5,11 +5,11 @@ where
 
 import Data.Attoparsec.Text
 import Control.Applicative
-import Data.Text (Text)
+import Data.Text (Text, unpack)
 import Data.Foldable
-import Data.Text (unpack)
 import Prelude hiding (takeWhile)
 import Data.Char
+import Control.Monad
 
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
@@ -76,7 +76,7 @@ doubleQuotes :: Parser a -> Parser a
 doubleQuotes = between (symbol "\"") (symbol "\"")
 
 comma :: Parser ()
-comma = symbol "," >> return ()
+comma = void(symbol ",")
 
 literal :: Value v => Text -> v -> Parser v
 literal s result = symbol s *> pure result
@@ -89,7 +89,7 @@ symbols keywords = asum $ literalMap <$> keywords
 
 
 maybeTry :: Parser a -> Parser (Maybe a)
-maybeTry p = Just <$> try (p) <|> return Nothing
+maybeTry p = Just <$> try p <|> return Nothing
 
 percentParser :: Parser Percent
 percentParser = do p <- number
@@ -113,7 +113,7 @@ lengthParser = do len <- number
 imageUrl :: Parser Image
 imageUrl = do
   symbol "url"
-  url <- (singleQuoteUrl <|> doubleQuoteUrl <|> noQuoteUrl)
+  url <- singleQuoteUrl <|> doubleQuoteUrl <|> noQuoteUrl
   return $ Url (unpack url)
 
   where singleQuoteUrl = parens $ singleQuotes innerUrl

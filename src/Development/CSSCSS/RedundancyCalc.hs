@@ -24,8 +24,8 @@ findMatches :: [Ruleset] -> [(IndexedRuleset, [Match])]
 findMatches rulesets = reduce $ map match indexedRulesets
   where
     reduce = nubBy indexes . foldr atLeastTwo []
-    indexes (_, ms1) (_, ms2) = (sort $ map getMId ms1) == (sort $ map getMId ms2)
-    atLeastTwo item@(_, rs) ms = if (length rs) > 1 then item:ms else ms
+    indexes (_, ms1) (_, ms2) = sort (map getMId ms1) == sort (map getMId ms2)
+    atLeastTwo item@(_, rs) ms = if length rs > 1 then item:ms else ms
 
     match ir@(index, _) = foldr matcher (ir, []) (otherIndexedRulesets index)
 
@@ -35,26 +35,26 @@ findMatches rulesets = reduce $ map match indexedRulesets
     sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getRules ruleset)
 
 matcher :: IndexedRuleset -> (IndexedRuleset, [Match]) -> (IndexedRuleset, [Match])
-matcher (index, ruleset) iRulesetCheck@(checkRuleset, matches) = if (null sameRules)
+matcher (index, ruleset) iRulesetCheck@(checkRuleset, matches) = if null sameRules
                                                                    then iRulesetCheck
                                                                    else (checkRuleset, match:matches)
 
   where
-    sameRules = filter (\r -> r `elem` rules) checkRules
+    sameRules = filter (`elem` rules) checkRules
     rules = getRules ruleset
     checkRules = getRules (snd checkRuleset)
     match = Match index (getSelector ruleset) sameRules
 
 groupMatches :: [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]
-groupMatches matches = concat $ map pairEach matches
+groupMatches = concatMap pairEach
   where
     pairEach (indexedRuleset, matches') = map (\match -> (indexedRuleset, match)) matches'
 
 
 nubMatches :: [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]
-nubMatches pairs = nubBy nubber pairs
+nubMatches = nubBy nubber
   where
-    nubber ((i1, _), (Match m1 _ _)) ((i2, _), (Match m2 _ _)) = i1 == m2 && m1 == i2
+    nubber ((i1, _), Match m1 _ _) ((i2, _), Match m2 _ _) = i1 == m2 && m1 == i2
 
 reduceMatches :: Int -> [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]
 reduceMatches num matches = sortBy matchTotal $ filter matchLength matches

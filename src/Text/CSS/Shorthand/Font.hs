@@ -160,17 +160,17 @@ lineHeight = do symbol "/"
 fontFamilies :: Parser [FontFamily]
 fontFamilies = inherit <|> families
   where
-    families = do f <- family
+    families = do f <- family'
                   maybeFS <- maybeTry $ many1 otherFamily
                   case maybeFS of
                     Just fs -> return (f:fs)
                     Nothing -> return [f]
 
-    family = generic <|> fontName
-    fontName = qQ <|> q <|> noQ >>= return . FontName
+    family' = generic <|> fontName
+    fontName = liftM FontName (qQ <|> q <|> noQ)
     otherFamily = do skipSpace
                      symbol ","
-                     family
+                     family'
 
     generic = symbols [
         ("serif", SerifName)
