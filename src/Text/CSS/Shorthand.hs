@@ -2,11 +2,11 @@
 
 -- Parser is built from http://www.w3.org/TR/CSS/ as a reference
 
-module Shorthand (
-  module Shorthand.Background
-  , module Shorthand.Border
-  , module Shorthand.Font
-  , module Shorthand.ListStyle
+module Text.CSS.Shorthand (
+  module Text.CSS.Shorthand.Background
+  , module Text.CSS.Shorthand.Border
+  , module Text.CSS.Shorthand.Font
+  , module Text.CSS.Shorthand.ListStyle
 
   , HorizontalPoint (..)
   , VerticalPoint (..)
@@ -18,8 +18,8 @@ module Shorthand (
   , Image (..)
 ) where
 
-import Shorthand.Background
-import Shorthand.Border
-import Shorthand.Font
-import Shorthand.ListStyle
-import Shorthand.Utility
+import Text.CSS.Shorthand.Background
+import Text.CSS.Shorthand.Border
+import Text.CSS.Shorthand.Font
+import Text.CSS.Shorthand.ListStyle
+import Text.CSS.Shorthand.Utility
