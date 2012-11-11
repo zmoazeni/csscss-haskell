@@ -10,6 +10,7 @@ import Text.Printf
 import System.Console.GetOpt
 import Data.Maybe (fromMaybe, fromJust)
 import Control.Monad
+import Text.JSON
 
 import Rulesets
 import RedundancyCalc
@@ -19,6 +20,7 @@ data Options = Options
  , optShowVersion :: Bool
  , optShowHelp    :: Bool
  , optNum         :: Maybe Int
+ , optJSON        :: Bool
  } deriving Show
 
 defaultOptions    = Options
@@ -26,6 +28,7 @@ defaultOptions    = Options
  , optShowVersion = False
  , optShowHelp    = False
  , optNum         = Just 3
+ , optJSON        = False
  }
 
 options :: [OptDescr (Options -> Options)]
@@ -39,6 +42,9 @@ options =
  , Option ['n'] ["num"]
      (OptArg ((\num opts -> opts { optNum = Just num }) . read . fromMaybe "3") "NUM")
      "Print selectors that match at least NUM times. Defaults 3."
+ , Option ['j'] ["json"]
+     (NoArg (\ opts -> opts { optJSON = True }))
+     "Format output in JSON"
  , Option ['h', 'H'] ["help"]
      (NoArg (\ opts -> opts { optShowHelp = True }))
      "Display this help message."
@@ -56,7 +62,7 @@ printHelp progName = do
   putStr (usageInfo header options)
   exitWith ExitSuccess
   where
-    header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
+    header = "Usage: " ++ progName ++ " [OPTION...] cssfile"
 
 printVersion progName = do
   putStrLn $ progName ++ " version 0.0.1"
@@ -74,7 +80,8 @@ main = do
   case errorOrRules of
     Left e   -> printParseError e
     Right rs -> do
-      let output = render (displayRulesets opts rs)
+      let redundancies = findRedundancies opts rs
+          output = if (optJSON opts) then (jsonRulesets opts redundancies) else render (printRulesets opts redundancies)
       putStrLn output
 
   where
@@ -84,11 +91,8 @@ main = do
     printParseError error = putStrLn $ "Error parsing css: " ++ error
 
 
-displayRulesets :: Options -> [RawRuleset] -> Doc
-displayRulesets opts rawRulesets = do
-  let rulesets = map buildRuleset rawRulesets
-      min = fromJust (optNum opts)
-      redundantRulesets = compactMatches min (findMatches rulesets)
+printRulesets :: Options -> [(IndexedRuleset, Match)] -> Doc
+printRulesets opts redundantRulesets = do
   vcat (map format redundantRulesets)
   where
     format (ruleset, match) = do let r1 = unpack $ getSelector (snd ruleset)
@@ -98,12 +102,29 @@ displayRulesets opts rawRulesets = do
                                      verbose = optVerbose opts
                                      singOrPlural = if num > 1 then "rules" else "rule" :: String
                                      s = printf "{%s} and {%s} share %d %s" r1 r2 num singOrPlural
+                                     sharedRules = liftM (nest 2 . (<+>) (text "-") . text) (map formatSharedRule rules)
                                  if verbose
-                                   then text s $+$ vcat (map formatSharedRule rules)
+                                   then text s $+$ vcat sharedRules
                                    else text s
 
-    formatSharedRule rule = do let prop = unpack $ getProperty rule
-                                   val = unpack $ getValue rule
-                                   r = printf "- %s:%s;" prop val
-                               nest 2 (text r)
+formatSharedRule :: Rule -> String
+formatSharedRule rule = do
+  let prop = unpack $ getProperty rule
+      val = unpack $ getValue rule
+  printf "%s:%s" prop val
 
+jsonRulesets :: Options -> [(IndexedRuleset, Match)] -> String
+jsonRulesets opts redundantRulesets = encode (map toJSON redundantRulesets)
+  where toJSON (ruleset, match) = do let r1 = unpack $ getSelector (snd ruleset)
+                                         r2 = unpack $ getMSelector match
+                                         rules = getMRules match
+                                         num = length rules
+                                         verbose = optVerbose opts
+                                         formattedRules = if verbose then [("rules", showJSON (map formatSharedRule rules))] else []
+                                     makeObj $ [("selectors", showJSON [r1, r2]), ("count", showJSON num)] ++ formattedRules
+
+findRedundancies :: Options -> [RawRuleset] -> [(IndexedRuleset, Match)]
+findRedundancies opts rawRulesets = do
+  let rulesets = map buildRuleset rawRulesets
+      min = fromJust (optNum opts)
+  compactMatches min (findMatches rulesets)
