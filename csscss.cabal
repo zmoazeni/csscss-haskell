@@ -1,10 +1,22 @@
 name:           csscss
 version:        0.0.1.0
 synopsis:       A css redundancy analyzer that analyzes redundancy
+description:    csscss will parse all css rules and report duplicates
+                to help a developer reduce duplication.
+author:         Zach Moazeni <zach.moazeni@gmail.com>
+maintainer:     Zach Moazeni <zach.moazeni@gmail.com>
+copyright:      2012 Zach Moazeni
+homepage:       https://github.com/zmoazeni/csscss
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.2
+category:       Development
+stability:      Experimental
+
+source-repository: head
+  type: git
+  location: https://github.com/zmoazeni/csscss.git
 
 executable csscss
   main-is:         Main.hs
