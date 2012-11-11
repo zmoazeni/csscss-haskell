@@ -28,4 +28,8 @@ executable csscss
                    text >= 0.11,
                    pretty >= 1.1,
                    attoparsec >= 0.10
-
+test-suite specs
+  type:            exitcode-stdio-1.0
+  hs-source-dirs:  src, spec
+  main-is:         Suite.hs
+  build-depends:   base, hspec >= 1

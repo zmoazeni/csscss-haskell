@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module RulesetsSpec where
+module Development.CSSCSS.RulesetsSpec where
 
 import Test.Hspec
-import Rulesets
+import Development.CSSCSS.Rulesets
 
 main = hspec spec
 

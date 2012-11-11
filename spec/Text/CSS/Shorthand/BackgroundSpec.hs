@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.BackgroundSpec (main, spec) where
+module Text.CSS.Shorthand.BackgroundSpec (main, spec) where
 
 import Test.Hspec
-import Shorthand
+import Text.CSS.Shorthand
 import Data.Maybe
 
 -- trace (show $ parseBackground "black") False

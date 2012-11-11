@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.BorderSpec (main, spec) where
+module Text.CSS.Shorthand.BorderSpec (main, spec) where
 
 import Test.Hspec
-import Shorthand
+import Text.CSS.Shorthand
 import Data.Maybe
 
 parse = fromJust . parseBorder

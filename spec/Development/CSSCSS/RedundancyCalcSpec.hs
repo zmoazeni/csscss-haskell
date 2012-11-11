@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module RedundancyCalcSpec where
+module Development.CSSCSS.RedundancyCalcSpec where
 
 import Test.Hspec
-import Rulesets
-import RedundancyCalc
+import Development.CSSCSS.Rulesets
+import Development.CSSCSS.RedundancyCalc
 
 main = hspec spec
 

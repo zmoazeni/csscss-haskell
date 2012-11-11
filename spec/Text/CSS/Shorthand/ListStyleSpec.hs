@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.ListStyleSpec (main, spec) where
+module Text.CSS.Shorthand.ListStyleSpec (main, spec) where
 
 import Test.Hspec
-import Shorthand
+import Text.CSS.Shorthand
 import Data.Maybe
 
 parse = fromJust . parseListStyle

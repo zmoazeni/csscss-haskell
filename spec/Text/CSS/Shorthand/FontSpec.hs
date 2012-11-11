@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.FontSpec (main, spec) where
+module Text.CSS.Shorthand.FontSpec (main, spec) where
 
 import Test.Hspec
-import Shorthand
+import Text.CSS.Shorthand
 import Data.Maybe
 
 parse = fromJust . parseFont
