@@ -11,15 +11,15 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.2
-category:       Development
+category:       Development, Web
 stability:      Experimental
 
-source-repository: head
+source-repository head
   type: git
   location: https://github.com/zmoazeni/csscss.git
 
 executable csscss
-  main-is:         Main.hs
+  main-is:         CSSCSS.hs
   hs-source-dirs:  src
   ghc-options:     -Wall
   build-depends:   base >= 3 && < 5,

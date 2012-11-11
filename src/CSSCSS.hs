@@ -12,8 +12,8 @@ import Data.Maybe (fromMaybe, fromJust)
 import Control.Monad
 import Text.JSON
 
-import Rulesets
-import RedundancyCalc
+import Development.CSSCSS.Rulesets
+import Development.CSSCSS.RedundancyCalc
 
 data Options = Options
  { optVerbose     :: Bool

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.ListStyle (
+module Text.CSS.Shorthand.ListStyle (
     ListStyle (..)
   , ListStyleType (..)
   , ListStylePosition (..)
@@ -10,7 +10,7 @@ module Shorthand.ListStyle (
 
 ) where
 
-import Shorthand.Utility
+import Text.CSS.Shorthand.Utility
 import Data.Attoparsec.Text hiding (take)
 import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)

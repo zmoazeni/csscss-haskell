@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.Background (
+module Text.CSS.Shorthand.Background (
     Background (..)
   , Repeat (..)
   , Attachment (..)
@@ -10,7 +10,7 @@ module Shorthand.Background (
   )
 where
 
-import Shorthand.Utility
+import Text.CSS.Shorthand.Utility
 import Data.Attoparsec.Text
 import qualified Data.Attoparsec.Text.Lazy as AL
 import Prelude hiding (takeWhile)

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Shorthand.Utility
+module Text.CSS.Shorthand.Utility
 where
 
 import Data.Attoparsec.Text

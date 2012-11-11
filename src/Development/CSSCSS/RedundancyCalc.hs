@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module RedundancyCalc where
+module Development.CSSCSS.RedundancyCalc where
 
 import Data.Text (Text)
 import Data.List
 
-import Rulesets
+import Development.CSSCSS.Rulesets
 
 data Match = Match {getMId       :: Integer,
                     getMSelector :: Text,
