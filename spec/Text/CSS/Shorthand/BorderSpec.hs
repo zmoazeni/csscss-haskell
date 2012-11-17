@@ -54,6 +54,9 @@ spec = describe "border spec" $ do
         (Just (BorderWidths (Just Thin) (Just Thin) (Just Thin) (Just Thin)))
         (Just (BorderStyles (Just Dashed) (Just Dashed) (Just Dashed) (Just Dashed)))
 
+    it "returns Nothing if it can't parse" $ do
+      parseBorder "foobar" == Nothing
+
   describe "getLonghandRules" $ do
     it "all values" $ do
       let border = Border (Just (BorderWidths (Just Thin) (Just Medium) (Just Thick) (Just . WLength $ Length 10 PX)))

@@ -107,7 +107,9 @@ borderParser = inherit <|> longhand
     longhand = do widths <- maybeTry borderWidths
                   skipSpace
                   styles <- maybeTry borderStyles
-                  return $ Border widths styles
+                  if widths == Nothing && styles == Nothing
+                    then empty
+                    else return (Border widths styles)
 
 
 borderWidthParser :: Parser BorderWidth
