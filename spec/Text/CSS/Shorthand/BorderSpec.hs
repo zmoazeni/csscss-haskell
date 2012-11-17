@@ -38,6 +38,12 @@ spec = describe "border spec" $ do
     it "parses lengths" $ do
       borderWidth "thin 10px medium 20em" == BorderWidths Thin (WLength $ Length 10 PX) Medium (WLength $ Length 20 EM)
 
+    it "parses lengths" $ do
+      borderWidth "thin 10px medium 20em" == BorderWidths Thin (WLength $ Length 10 PX) Medium (WLength $ Length 20 EM)
+
+    it "parses inherit" $ do
+      borderWidth "inherit" == InheritBorderWidth
+
   describe "border-style" $ do
     it "parses 1" $ do
       borderStyle "dashed" == BorderStyles Dashed Dashed Dashed Dashed
@@ -57,9 +63,25 @@ spec = describe "border spec" $ do
     it "ignores unknown" $ do
       borderStyle "dashed double foo groove" == BorderStyles Dashed Double Dashed Double
 
+    it "parses inherit" $ do
+      borderStyle "inherit" == InheritBorderStyle
+
   describe "border" $ do
     it "parses inherit" $ do
       parse "inherit" == InheritBorder
+
+    it "parses inherit width and style" $ do
+      parse "inherit inherit" == Border (Just InheritBorderWidth) (Just InheritBorderStyle)
+
+    it "parses width and inherit style" $ do
+      parse "thick inherit" == Border
+        (Just (BorderWidths Thick Thick Thick Thick))
+        (Just InheritBorderStyle)
+
+    it "parses width and inherit style" $ do
+      parse "inherit dashed" == Border
+        (Just InheritBorderWidth)
+        (Just (BorderStyles Dashed Dashed Dashed Dashed))
 
     it "parses all" $ do
       parse "thin dashed" == Border

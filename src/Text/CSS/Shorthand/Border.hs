@@ -41,6 +41,7 @@ data BorderWidths = BorderWidths {getTopWidth    :: BorderWidth,
                                   getRightWidth  :: BorderWidth,
                                   getBottomWidth :: BorderWidth,
                                   getLeftWidth   :: BorderWidth}
+                    | InheritBorderWidth
                   deriving (Eq, Show, Ord)
 
 data BorderStyle = None | Hidden | Dotted | Dashed | Solid | Double | Groove |
@@ -51,6 +52,7 @@ data BorderStyles = BorderStyles {getTopStyle    :: BorderStyle,
                                   getRightStyle  :: BorderStyle,
                                   getBottomStyle :: BorderStyle,
                                   getLeftStyle   :: BorderStyle}
+                    | InheritBorderStyle
                  deriving (Eq, Show, Ord)
 
 instance Value BorderWidth
@@ -104,9 +106,12 @@ borderParser = inherit <|> longhand
     inherit = do symbol "inherit"
                  endOfInput
                  return InheritBorder
-    longhand = do widths <- maybeTry borderWidths
+
+    inherit1 x = symbol "inherit" *> return x
+
+    longhand = do widths <- maybeTry (borderWidths <|> (inherit1 InheritBorderWidth))
                   skipSpace
-                  styles <- maybeTry borderStyles
+                  styles <- maybeTry (borderStyles <|> (inherit1 InheritBorderStyle))
                   if widths == Nothing && styles == Nothing
                     then empty
                     else return (Border widths styles)
@@ -125,14 +130,21 @@ borderWidths = do
 
 
 borderWidthsParser :: Parser BorderWidths
-borderWidthsParser = do
-  ws <- many1 borderWidthParser
-  let borderWidths = case ws of
-                       (w1:[])          -> BorderWidths w1 w1 w1 w1
-                       (w1:w2:[])       -> BorderWidths w1 w2 w1 w2
-                       (w1:w2:w3:[])    -> BorderWidths w1 w2 w3 w2
-                       (w1:w2:w3:w4:_)  -> BorderWidths w1 w2 w3 w4
-  return borderWidths
+borderWidthsParser = separate <|> inherit
+  where
+    inherit = do
+      symbol "inherit"
+      endOfInput
+      return InheritBorderWidth
+
+    separate = do
+      ws <- many1 borderWidthParser
+      let borderWidths = case ws of
+                           (w1:[])          -> BorderWidths w1 w1 w1 w1
+                           (w1:w2:[])       -> BorderWidths w1 w2 w1 w2
+                           (w1:w2:w3:[])    -> BorderWidths w1 w2 w3 w2
+                           (w1:w2:w3:w4:_)  -> BorderWidths w1 w2 w3 w4
+      return borderWidths
 
 borderStyleParser :: Parser BorderStyle
 borderStyleParser = symbols [
@@ -153,11 +165,17 @@ borderStyles = do
   return $ BorderStyles s s s s
 
 borderStylesParser :: Parser BorderStyles
-borderStylesParser = do
-  styles <- many1 borderStyleParser
-  let borderStyles = case styles of
-                       (s1:[])          -> BorderStyles s1 s1 s1 s1
-                       (s1:s2:[])       -> BorderStyles s1 s2 s1 s2
-                       (s1:s2:s3:[])    -> BorderStyles s1 s2 s3 s2
-                       (s1:s2:s3:s4:_)  -> BorderStyles s1 s2 s3 s4
-  return borderStyles
+borderStylesParser = separate <|> inherit
+  where
+    inherit = do
+      symbol "inherit"
+      endOfInput
+      return InheritBorderStyle
+    separate = do
+      styles <- many1 borderStyleParser
+      let borderStyles = case styles of
+                           (s1:[])          -> BorderStyles s1 s1 s1 s1
+                           (s1:s2:[])       -> BorderStyles s1 s2 s1 s2
+                           (s1:s2:s3:[])    -> BorderStyles s1 s2 s3 s2
+                           (s1:s2:s3:s4:_)  -> BorderStyles s1 s2 s3 s4
+      return borderStyles
