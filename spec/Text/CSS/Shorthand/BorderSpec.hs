@@ -5,6 +5,7 @@ module Text.CSS.Shorthand.BorderSpec (main, spec) where
 import Test.Hspec
 import Text.CSS.Shorthand
 import Data.Maybe
+import Development.CSSCSS.Rulesets
 
 parse = fromJust . parseBorder
 parseSingle f = fromJust . f . parse
@@ -52,3 +53,30 @@ spec = describe "border spec" $ do
       parse "thin dashed" == Border
         (Just (BorderWidths (Just Thin) (Just Thin) (Just Thin) (Just Thin)))
         (Just (BorderStyles (Just Dashed) (Just Dashed) (Just Dashed) (Just Dashed)))
+
+  describe "getLonghandRules" $ do
+    it "all values" $ do
+      let border = Border (Just (BorderWidths (Just Thin) (Just Medium) (Just Thick) (Just . WLength $ Length 10 PX)))
+                    (Just (BorderStyles (Just Dashed) (Just None) (Just Solid) (Just Double)))
+      getLonghandRules border == [
+        Rule "border-top-width"    "thin",
+        Rule "border-right-width"  "medium",
+        Rule "border-bottom-width" "thick",
+        Rule "border-left-width"   "10px",
+        Rule "border-top-style"    "dashed",
+        Rule "border-right-style"  "none",
+        Rule "border-bottom-style" "solid",
+        Rule "border-left-style"   "double"]
+
+    it "missing some" $ do
+      let border = Border (Just (BorderWidths (Just Thin) Nothing Nothing (Just . WLength $ Length 10 PX)))
+                    (Just (BorderStyles (Just Dashed) (Just None) Nothing Nothing))
+      getLonghandRules border == [
+        Rule "border-top-width"    "thin",
+        Rule "border-left-width"   "10px",
+        Rule "border-top-style"    "dashed",
+        Rule "border-right-style"  "none"]
+
+    it "missing styles" $ do
+      let border = Border (Just (BorderWidths (Just Thin) Nothing Nothing (Just . WLength $ Length 10 PX))) Nothing
+      getLonghandRules border == [ Rule "border-top-width" "thin", Rule "border-left-width" "10px"]

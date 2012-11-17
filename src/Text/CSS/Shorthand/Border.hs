@@ -22,8 +22,11 @@ import Text.CSS.Shorthand.Utility
 import Data.Attoparsec.Text hiding (take)
 import qualified Data.Attoparsec.Text.Lazy as AL hiding (take)
 import Data.Text.Lazy as L (Text)
+import Data.Text (append, toLower, pack)
 import Control.Applicative
 import Control.Monad
+import Data.Maybe
+import Development.CSSCSS.Rulesets
 
 data Border = Border {  getWidth :: Maybe BorderWidths
                       , getStyle :: Maybe BorderStyles
@@ -54,6 +57,30 @@ instance Value BorderWidth
 instance Value BorderWidths
 instance Value BorderStyle
 instance Value BorderStyles
+
+instance ShorthandProperty Border where
+  getLonghandRules InheritBorder = []
+  getLonghandRules (Border widths styles) = catMaybes (concat [longhandWidths, longhandStyles])
+    where
+      literalSides = ["top", "right", "bottom", "left"]
+
+      longhandWidths = maybe [] (\(BorderWidths t r b l) ->
+          zipWith (\side val -> liftM (width side) val) literalSides [t, r, b, l]
+        ) widths
+
+      width side value = let value' = case value of
+                                        WLength l -> pack (show l)
+                                        _         -> toLower (pack (show value))
+                         in Rule property value'
+        where property = "border-" `append` side `append` "-width"
+
+      longhandStyles = maybe [] (\(BorderStyles t r b l) ->
+          zipWith (\side val -> liftM (style side) val) literalSides [t, r, b, l]
+        ) styles
+      style side value = let value' = toLower (pack (show value))
+                         in Rule property value'
+        where property = "border-" `append` side `append` "-style"
+
 
 --
 -- Parse Commands

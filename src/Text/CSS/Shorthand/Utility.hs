@@ -11,6 +11,8 @@ import Prelude hiding (takeWhile)
 import Data.Char
 import Control.Monad
 
+import Development.CSSCSS.Rulesets
+
 data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
              RGBP {getRP :: String, getGP :: String, getBP :: String} |
@@ -30,7 +32,11 @@ data Percent = Percent Number
              deriving (Eq, Show, Ord)
 
 data Length = Length {getLength :: Number, getLengthUnit :: LengthUnit}
-            deriving (Eq, Show, Ord)
+            deriving (Eq, Ord)
+
+instance Show Length where
+  show (Length n unit) = show n ++ unitS
+    where unitS = map toLower (show unit)
 
 
 data HorizontalPoint = LeftPoint | RightPoint | HCenterPoint | HLength Length | HPercent Percent
@@ -49,6 +55,9 @@ instance Value Position
 instance Value HorizontalPoint
 instance Value VerticalPoint
 instance Value LengthUnit
+
+class ShorthandProperty a where
+  getLonghandRules :: a -> [Rule]
 
 lexeme :: Parser a -> Parser a
 lexeme p = p <* skipSpace
