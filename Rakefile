@@ -17,7 +17,7 @@ task :default => :compile
 
 desc "Run all the specs"
 task :spec do
-  sh "runghc -isrc -ispec spec/Suite.hs"
+  sh "runghc -isrc -ispec -package-conf=./cabal-dev/packages-7.4.2.conf spec/Suite.hs"
 end
 
 namespace :clean do
