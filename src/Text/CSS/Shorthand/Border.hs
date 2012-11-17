@@ -37,20 +37,20 @@ data Border = Border {  getWidth :: Maybe BorderWidths
 data BorderWidth = Thin | Medium | Thick | WLength Length
                  deriving (Eq, Show, Ord)
 
-data BorderWidths = BorderWidths {getTopWidth    :: Maybe BorderWidth,
-                                  getRightWidth  :: Maybe BorderWidth,
-                                  getBottomWidth :: Maybe BorderWidth,
-                                  getLeftWidth   :: Maybe BorderWidth}
+data BorderWidths = BorderWidths {getTopWidth    :: BorderWidth,
+                                  getRightWidth  :: BorderWidth,
+                                  getBottomWidth :: BorderWidth,
+                                  getLeftWidth   :: BorderWidth}
                   deriving (Eq, Show, Ord)
 
 data BorderStyle = None | Hidden | Dotted | Dashed | Solid | Double | Groove |
                    Ridge | Inset | Outset
                  deriving (Eq, Show, Ord)
 
-data BorderStyles = BorderStyles {getTopStyle    :: Maybe BorderStyle,
-                                  getRightStyle  :: Maybe BorderStyle,
-                                  getBottomStyle :: Maybe BorderStyle,
-                                  getLeftStyle   :: Maybe BorderStyle}
+data BorderStyles = BorderStyles {getTopStyle    :: BorderStyle,
+                                  getRightStyle  :: BorderStyle,
+                                  getBottomStyle :: BorderStyle,
+                                  getLeftStyle   :: BorderStyle}
                  deriving (Eq, Show, Ord)
 
 instance Value BorderWidth
@@ -60,12 +60,12 @@ instance Value BorderStyles
 
 instance ShorthandProperty Border where
   getLonghandRules InheritBorder = []
-  getLonghandRules (Border widths styles) = catMaybes (concat [longhandWidths, longhandStyles])
+  getLonghandRules (Border widths styles) = concat [longhandWidths, longhandStyles]
     where
       literalSides = ["top", "right", "bottom", "left"]
 
       longhandWidths = maybe [] (\(BorderWidths t r b l) ->
-          zipWith (\side val -> liftM (width side) val) literalSides [t, r, b, l]
+          zipWith (\side val -> width side val) literalSides [t, r, b, l]
         ) widths
 
       width side value = let value' = case value of
@@ -75,7 +75,7 @@ instance ShorthandProperty Border where
         where property = "border-" `append` side `append` "-width"
 
       longhandStyles = maybe [] (\(BorderStyles t r b l) ->
-          zipWith (\side val -> liftM (style side) val) literalSides [t, r, b, l]
+          zipWith (\side val -> style side val) literalSides [t, r, b, l]
         ) styles
       style side value = let value' = toLower (pack (show value))
                          in Rule property value'
@@ -119,16 +119,20 @@ borderWidthParser = symbols [
   , ("thick",  Thick)] `mplus` (WLength <$> lengthParser)
 
 borderWidths :: Parser BorderWidths
-borderWidths = do w <- borderWidthParser
-                  return $ BorderWidths (Just w) (Just w) (Just w) (Just w)
+borderWidths = do
+  w <- borderWidthParser
+  return $ BorderWidths w w w w
 
 
 borderWidthsParser :: Parser BorderWidths
-borderWidthsParser = do ws <- many1 borderWidthParser
-                        let (w1:w2:w3:w4:_) = pad (map Just ws)
-                        return $ BorderWidths w1 w2 w3 w4
-  where
-    pad ws = take 4 $ ws ++ repeat Nothing
+borderWidthsParser = do
+  ws <- many1 borderWidthParser
+  let borderWidths = case ws of
+                       (w1:[])          -> BorderWidths w1 w1 w1 w1
+                       (w1:w2:[])       -> BorderWidths w1 w2 w1 w2
+                       (w1:w2:w3:[])    -> BorderWidths w1 w2 w3 w2
+                       (w1:w2:w3:w4:_)  -> BorderWidths w1 w2 w3 w4
+  return borderWidths
 
 borderStyleParser :: Parser BorderStyle
 borderStyleParser = symbols [
@@ -144,13 +148,16 @@ borderStyleParser = symbols [
   , ("outset", Outset)]
 
 borderStyles :: Parser BorderStyles
-borderStyles = do s <- borderStyleParser
-                  return $ BorderStyles (Just s) (Just s) (Just s) (Just s)
+borderStyles = do
+  s <- borderStyleParser
+  return $ BorderStyles s s s s
 
 borderStylesParser :: Parser BorderStyles
-borderStylesParser = do ws <- many1 borderStyleParser
-                        let (w1:w2:w3:w4:_) = pad (map Just ws)
-                        return $ BorderStyles w1 w2 w3 w4
-  where
-    pad ws = take 4 $ ws ++ repeat Nothing
-
+borderStylesParser = do
+  styles <- many1 borderStyleParser
+  let borderStyles = case styles of
+                       (s1:[])          -> BorderStyles s1 s1 s1 s1
+                       (s1:s2:[])       -> BorderStyles s1 s2 s1 s2
+                       (s1:s2:s3:[])    -> BorderStyles s1 s2 s3 s2
+                       (s1:s2:s3:s4:_)  -> BorderStyles s1 s2 s3 s4
+  return borderStyles
