@@ -47,7 +47,7 @@ backgroundParser = inherit <|> longhand
     inherit = do symbol "inherit"
                  endOfInput
                  return InheritBackground
-    longhand = do color <- maybeTry bgColor
+    longhand = do color' <- maybeTry color
                   skipSpace
                   image <- maybeTry bgImage
                   skipSpace
@@ -56,68 +56,8 @@ backgroundParser = inherit <|> longhand
                   attachment <- maybeTry bgAttachment
                   skipSpace
                   position <- maybeTry bgPosition
-                  return $ Background color image repeat' attachment position
+                  return $ Background color' image repeat' attachment position
 
-
---
--- Colors
---
-
-bgColor :: Parser Color
-bgColor = hexColor <|> rgbpColor <|> rgbColor <|> bgColorKeyword <|> inherit
-  where inherit = literal "inherit" InheritColor
-
-hexColor :: Parser Color
-hexColor = do symbol "#"
-              rawRGB <- takeWhile $ inClass "a-fA-F0-9"
-              let rgb = expandRGB rawRGB (T.length rawRGB)
-              return (Hex rgb)
-  where expandRGB xs 3 = Prelude.concatMap (\x -> [x, x]) (unpack xs)
-        expandRGB xs _ = unpack xs
-
-rgbColor :: Parser Color
-rgbColor = do
-  symbol "rgb"
-  (r, g, b) <- rgbParams (takeWhile isNumber)
-  return $ RGB r g b
-
-rgbpColor :: Parser Color
-rgbpColor = do
-  symbol "rgb"
-  (r, g, b) <- rgbParams percent
-  return $ RGBP r g b
-  where percent = takeWhile isNumber <* symbol "%"
-
-rgbParams :: Parser T.Text -> Parser (String, String, String)
-rgbParams p = parens $ do
-  r <- p
-  symbol ","
-  g <- p
-  symbol ","
-  b <- p
-  return (unpack r, unpack g, unpack b)
-
-bgColorKeyword :: Parser Color
-bgColorKeyword = asum $ fmap parseNamedColor namedColors
-  where
-    parseNamedColor (name, hexColor') = stringCI name *> pure (Hex hexColor')
-    namedColors = [ ("black",   "000000")
-                  , ("silver",  "c0c0c0")
-                  , ("gray",    "808080")
-                  , ("white",   "ffffff")
-                  , ("maroon",  "800000")
-                  , ("red",     "ff0000")
-                  , ("purple",  "800080")
-                  , ("fuchsia", "ff00ff")
-                  , ("green",   "008000")
-                  , ("lime",    "00ff00")
-                  , ("olive",   "808000")
-                  , ("yellow",  "ffff00")
-                  , ("navy",    "000080")
-                  , ("blue",    "0000ff")
-                  , ("teal",    "008080")
-                  , ("aqua",    "00ffff")
-                  ]
 
 --
 -- Images

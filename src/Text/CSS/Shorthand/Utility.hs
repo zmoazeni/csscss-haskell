@@ -6,6 +6,7 @@ where
 import Data.Attoparsec.Text
 import Control.Applicative
 import Data.Text (Text, unpack)
+import Data.Text as T (length)
 import Data.Foldable
 import Prelude hiding (takeWhile)
 import Data.Char
@@ -130,3 +131,55 @@ imageUrl = do
         noQuoteUrl     = parens innerUrl
         innerUrl       = takeWhile isUrl
         isUrl c        = isLetter c || isNumber c || inClass ":/?&." c
+
+color :: Parser Color
+color = hexColor <|> rgbpColor <|> rgbColor <|> keyword <|> inherit
+  where
+    inherit = literal "inherit" InheritColor
+
+    hexColor = do symbol "#"
+                  rawRGB <- takeWhile $ inClass "a-fA-F0-9"
+                  let rgb = expandRGB rawRGB (T.length rawRGB)
+                  return (Hex rgb)
+      where expandRGB xs 3 = Prelude.concatMap (\x -> [x, x]) (unpack xs)
+            expandRGB xs _ = unpack xs
+
+    rgbColor = do
+      symbol "rgb"
+      (r, g, b) <- rgbParams (takeWhile isNumber)
+      return $ RGB r g b
+
+    rgbpColor = do
+      symbol "rgb"
+      (r, g, b) <- rgbParams percent
+      return $ RGBP r g b
+      where percent = takeWhile isNumber <* symbol "%"
+
+    rgbParams p = parens $ do
+      r <- p
+      symbol ","
+      g <- p
+      symbol ","
+      b <- p
+      return (unpack r, unpack g, unpack b)
+
+    keyword = asum $ fmap parseNamedColor namedColors
+      where
+        parseNamedColor (name, hexColor') = stringCI name *> pure (Hex hexColor')
+        namedColors = [ ("black",   "000000")
+                      , ("silver",  "c0c0c0")
+                      , ("gray",    "808080")
+                      , ("white",   "ffffff")
+                      , ("maroon",  "800000")
+                      , ("red",     "ff0000")
+                      , ("purple",  "800080")
+                      , ("fuchsia", "ff00ff")
+                      , ("green",   "008000")
+                      , ("lime",    "00ff00")
+                      , ("olive",   "808000")
+                      , ("yellow",  "ffff00")
+                      , ("navy",    "000080")
+                      , ("blue",    "0000ff")
+                      , ("teal",    "008080")
+                      , ("aqua",    "00ffff")
+                      ]
