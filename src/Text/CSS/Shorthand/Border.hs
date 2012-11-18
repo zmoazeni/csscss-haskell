@@ -72,35 +72,39 @@ instance Value BorderWidths
 instance Value BorderStyle
 instance Value BorderStyles
 
-instance ShorthandProperty Border where
-  getLonghandRules InheritBorder = []
-  getLonghandRules (Border widths styles colors) = concat [longhandWidths, longhandStyles, longhandColors]
+
+zipSides f xs = zipWith f literalSides xs
+  where
+    literalSides = ["top", "right", "bottom", "left"]
+
+instance ShorthandProperty BorderWidths where
+  getLonghandRules (BorderWidths t r b l) = zipSides width [t, r, b, l]
     where
-      literalSides = ["top", "right", "bottom", "left"]
-
-      longhandWidths = maybe [] (\(BorderWidths t r b l) ->
-          zipWith (\side val -> width side val) literalSides [t, r, b, l]
-        ) widths
-
       width side value = let value' = case value of
                                         WLength l -> pack (show l)
                                         _         -> toLower (pack (show value))
+                             property = "border-" `append` side `append` "-width"
                          in Rule property value'
-        where property = "border-" `append` side `append` "-width"
 
-      longhandStyles = maybe [] (\(BorderStyles t r b l) ->
-          zipWith (\side val -> style side val) literalSides [t, r, b, l]
-        ) styles
+instance ShorthandProperty BorderStyles where
+  getLonghandRules (BorderStyles t r b l) = zipSides style [t, r, b, l]
+    where
       style side value = let value' = toLower (pack (show value))
+                             property = "border-" `append` side `append` "-style"
                          in Rule property value'
-        where property = "border-" `append` side `append` "-style"
 
-      longhandColors = maybe [] (\(BorderColors t r b l) ->
-          zipWith (\side val -> color' side val) literalSides [t, r, b, l]
-        ) colors
+instance ShorthandProperty BorderColors where
+  getLonghandRules (BorderColors t r b l) = zipSides color' [t, r, b, l]
+    where
       color' side value = let value' = pack (show value)
-                         in Rule property value'
-        where property = "border-" `append` side `append` "-color"
+                              property = "border-" `append` side `append` "-color"
+                          in Rule property value'
+
+instance ShorthandProperty Border where
+  getLonghandRules InheritBorder = []
+  getLonghandRules (Border widths styles colors) = longhand widths ++ longhand styles ++ longhand colors
+    where
+      longhand x = maybe [] getLonghandRules x
 
 
 --
