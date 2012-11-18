@@ -8,6 +8,8 @@ module Text.CSS.Shorthand.Border (
   , BorderStyle (..)
   , BorderStyles (..)
 
+  , BorderColors (..)
+
   , parseBorder
   , borderParser
 
@@ -16,6 +18,9 @@ module Text.CSS.Shorthand.Border (
 
   , parseBorderStyles
   , borderStylesParser
+
+  , parseBorderColors
+  , borderColorsParser
 ) where
 
 import Text.CSS.Shorthand.Utility
@@ -30,6 +35,7 @@ import Development.CSSCSS.Rulesets
 
 data Border = Border {  getWidth :: Maybe BorderWidths
                       , getStyle :: Maybe BorderStyles
+                      , getBorderColor :: Maybe BorderColors
                      } | InheritBorder
             deriving (Eq, Show, Ord)
 
@@ -55,6 +61,12 @@ data BorderStyles = BorderStyles {getTopStyle    :: BorderStyle,
                     | InheritBorderStyle
                  deriving (Eq, Show, Ord)
 
+data BorderColors = BorderColors {getTopColor    :: Color,
+                                  getRightColor  :: Color,
+                                  getBottomColor :: Color,
+                                  getLeftColor   :: Color}
+                    | InheritBorderColor
+                 deriving (Eq, Show, Ord)
 instance Value BorderWidth
 instance Value BorderWidths
 instance Value BorderStyle
@@ -62,7 +74,7 @@ instance Value BorderStyles
 
 instance ShorthandProperty Border where
   getLonghandRules InheritBorder = []
-  getLonghandRules (Border widths styles) = concat [longhandWidths, longhandStyles]
+  getLonghandRules (Border widths styles colors) = concat [longhandWidths, longhandStyles, longhandColors]
     where
       literalSides = ["top", "right", "bottom", "left"]
 
@@ -83,6 +95,13 @@ instance ShorthandProperty Border where
                          in Rule property value'
         where property = "border-" `append` side `append` "-style"
 
+      longhandColors = maybe [] (\(BorderColors t r b l) ->
+          zipWith (\side val -> color' side val) literalSides [t, r, b, l]
+        ) colors
+      color' side value = let value' = pack (show value)
+                         in Rule property value'
+        where property = "border-" `append` side `append` "-color"
+
 
 --
 -- Parse Commands
@@ -96,6 +115,8 @@ parseBorderWidths s = AL.maybeResult $ AL.parse borderWidthsParser s
 parseBorderStyles :: L.Text -> Maybe BorderStyles
 parseBorderStyles s = AL.maybeResult $ AL.parse borderStylesParser s
 
+parseBorderColors :: L.Text -> Maybe BorderColors
+parseBorderColors s = AL.maybeResult $ AL.parse borderColorsParser s
 --
 -- Parsers
 --
@@ -112,22 +133,29 @@ borderParser = inherit <|> longhand
     longhand = do widths <- maybeTry (borderWidths <|> (inherit1 InheritBorderWidth))
                   skipSpace
                   styles <- maybeTry (borderStyles <|> (inherit1 InheritBorderStyle))
-                  if widths == Nothing && styles == Nothing
+                  skipSpace
+                  colors <- maybeTry (((inherit1 InheritBorderColor) <* endOfInput) <|> borderColors)
+                  if widths == Nothing && styles == Nothing && colors == Nothing
                     then empty
-                    else return (Border widths styles)
+                    else return (Border widths styles colors)
 
+    borderWidths = do
+      w <- borderWidthParser
+      return $ BorderWidths w w w w
+
+    borderStyles = do
+      s <- borderStyleParser
+      return $ BorderStyles s s s s
+
+    borderColors = do
+      c <- color
+      return $ BorderColors c c c c
 
 borderWidthParser :: Parser BorderWidth
 borderWidthParser = symbols [
     ("thin",   Thin)
   , ("medium", Medium)
   , ("thick",  Thick)] `mplus` (WLength <$> lengthParser)
-
-borderWidths :: Parser BorderWidths
-borderWidths = do
-  w <- borderWidthParser
-  return $ BorderWidths w w w w
-
 
 borderWidthsParser :: Parser BorderWidths
 borderWidthsParser = separate <|> inherit
@@ -159,11 +187,6 @@ borderStyleParser = symbols [
   , ("inset",  Inset)
   , ("outset", Outset)]
 
-borderStyles :: Parser BorderStyles
-borderStyles = do
-  s <- borderStyleParser
-  return $ BorderStyles s s s s
-
 borderStylesParser :: Parser BorderStyles
 borderStylesParser = separate <|> inherit
   where
@@ -179,3 +202,20 @@ borderStylesParser = separate <|> inherit
                            (s1:s2:s3:[])    -> BorderStyles s1 s2 s3 s2
                            (s1:s2:s3:s4:_)  -> BorderStyles s1 s2 s3 s4
       return borderStyles
+
+borderColorsParser :: Parser BorderColors
+borderColorsParser = inherit <|> separate
+  where
+    inherit = do
+      symbol "inherit"
+      endOfInput
+      return InheritBorderColor
+
+    separate = do
+      colors <- many1 (skipSpace >> color)
+      let borderColors = case colors of
+                           (s1:[])          -> BorderColors s1 s1 s1 s1
+                           (s1:s2:[])       -> BorderColors s1 s2 s1 s2
+                           (s1:s2:s3:[])    -> BorderColors s1 s2 s3 s2
+                           (s1:s2:s3:s4:_)  -> BorderColors s1 s2 s3 s4
+      return borderColors

@@ -18,7 +18,13 @@ data Color = Hex {getRGB :: String} |
              RGB {getR :: String, getG :: String, getB ::String} |
              RGBP {getRP :: String, getGP :: String, getBP :: String} |
              InheritColor
-           deriving (Eq, Show, Ord)
+           deriving (Eq, Ord)
+
+instance Show Color where
+  show InheritColor = "InheritColor"
+  show (Hex s) = "#" ++ s
+  show (RGB r g b) = "rgb(" ++ r ++ ", " ++ g ++ ", " ++ b ++ ")"
+  show (RGBP r g b) = "rgb(" ++ r ++ "%, " ++ g ++ "%, " ++ b ++ "%)"
 
 data Image = Url {getUrl :: String } |
              NoneImage |
