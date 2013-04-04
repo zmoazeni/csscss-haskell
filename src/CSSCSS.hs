@@ -35,19 +35,19 @@ defaultOptions    = Options
 options :: [OptDescr (Options -> Options)]
 options =
  [ Option "v" ["verbose"]
-     (NoArg (\ opts -> opts { optVerbose = True }))
+     (NoArg (\opts -> opts { optVerbose = True }))
      "Print each shared rule."
  , Option "V" ["version"]
-     (NoArg (\ opts -> opts { optShowVersion = True }))
+     (NoArg (\opts -> opts { optShowVersion = True }))
      "Show version number."
  , Option "n" ["num"]
      (OptArg ((\num opts -> opts { optNum = Just num }) . read . fromMaybe "3") "NUM")
      "Print selectors that match at least NUM times. Defaults 3."
  , Option "j" ["json"]
-     (NoArg (\ opts -> opts { optJSON = True }))
+     (NoArg (\opts -> opts { optJSON = True }))
      "Format output in JSON"
  , Option "hH" ["help"]
-     (NoArg (\ opts -> opts { optShowHelp = True }))
+     (NoArg (\opts -> opts { optShowHelp = True }))
      "Display this help message."
  ]
 
@@ -58,18 +58,6 @@ parseOpts progName argv =
       (_,_,errs) -> do
         putStr $ concat errs
         printHelp progName
-
-printHelp :: String -> IO a
-printHelp progName = do
-  putStr (usageInfo header options)
-  exitSuccess
-  where
-    header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
-
-printVersion :: String -> IO a
-printVersion progName = do
-  putStrLn $ progName ++ " version 0.0.1"
-  exitSuccess
 
 main :: IO ()
 main = do
@@ -83,37 +71,37 @@ main = do
   case errorOrRules of
     Left e   -> printParseError e
     Right rs -> do
-      let redundancies = findRedundancies opts rs
-          output = if optJSON opts then jsonRulesets opts redundancies else render (printRulesets opts redundancies)
+      let minRules = fromJust (optNum opts)
+          redundancies = findRedundancies minRules rs
+          output = if optJSON opts
+                     then jsonRulesets opts redundancies
+                     else render (printRulesets opts redundancies)
       putStrLn output
 
   where
-    parseFiles filePaths = do contents <- fmap concat $ mapM readFile filePaths
-                              return $ parseBlocks (pack contents)
+    parseFiles filePaths = liftM (parseBlocks . pack . concat) $ mapM readFile filePaths
 
-    printParseError e = putStrLn $ "Error parsing css: " ++ e
+    printParseError e = putStrLn ("Error parsing css: " ++ e)
+
+    findRedundancies minRules rawRulesets = let
+      matches = findMatches $ map buildRuleset rawRulesets
+      in compactMatches minRules matches
 
 
 printRulesets :: Options -> [(IndexedRuleset, Match)] -> Doc
 printRulesets opts redundantRulesets = vcat (map format redundantRulesets)
   where
-    format (ruleset, match) = do let r1 = unpack $ getSelector (snd ruleset)
-                                     r2 = unpack $ getMSelector match
-                                     rules = getMRules match
-                                     num = length rules
-                                     verbose = optVerbose opts
+    format (ruleset, match) = do let r1           = unpack $ getSelector (snd ruleset)
+                                     r2           = unpack $ getMSelector match
+                                     rules        = getMRules match
+                                     num          = length rules
+                                     verbose      = optVerbose opts
                                      singOrPlural = if num > 1 then "rules" else "rule" :: String
-                                     s = printf "{%s} and {%s} share %d %s" r1 r2 num singOrPlural
-                                     sharedRules = liftM (nest 2 . (<+>) (text "-") . text) (map formatSharedRule rules)
+                                     s            = printf "{%s} and {%s} share %d %s" r1 r2 num singOrPlural
+                                     sharedRules  = liftM (nest 2 . (<+>) (text "-") . text) (map formatSharedRule rules)
                                  if verbose
                                    then text s $+$ vcat sharedRules
                                    else text s
-
-formatSharedRule :: Rule -> String
-formatSharedRule rule = do
-  let prop = unpack $ getProperty rule
-      val = unpack $ getValue rule
-  printf "%s:%s" prop val
 
 jsonRulesets :: Options -> [(IndexedRuleset, Match)] -> String
 jsonRulesets opts redundantRulesets = encode (map toJSON redundantRulesets)
@@ -125,8 +113,21 @@ jsonRulesets opts redundantRulesets = encode (map toJSON redundantRulesets)
                                          formattedRules = [("rules", showJSON (map formatSharedRule rules)) | verbose]
                                      makeObj $ [("selectors", showJSON [r1, r2]), ("count", showJSON num)] ++ formattedRules
 
-findRedundancies :: Options -> [RawRuleset] -> [(IndexedRuleset, Match)]
-findRedundancies opts rawRulesets = do
-  let rulesets = map buildRuleset rawRulesets
-      min' = fromJust (optNum opts)
-  compactMatches min' (findMatches rulesets)
+formatSharedRule :: Rule -> String
+formatSharedRule rule = do
+  let prop = unpack (getProperty rule)
+      val  = unpack (getValue rule)
+  printf "%s:%s" prop val
+
+printHelp :: String -> IO a
+printHelp progName = do
+  putStr (usageInfo header options)
+  exitSuccess
+  where
+    header = "Usage: " ++ progName ++ " [OPTION...] cssfiles..."
+
+printVersion :: String -> IO a
+printVersion progName = do
+  putStrLn $ progName ++ " version 0.0.1"
+  exitSuccess
+
