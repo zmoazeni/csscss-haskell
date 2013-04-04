@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]
+then
+  runghc -isrc -itest test/Suite.hs
+else
+  runghc -isrc -itest $1
+fi
