@@ -2,3 +2,4 @@ bin/*
 tmp
 cabal-dev
 dist
+.shelly
