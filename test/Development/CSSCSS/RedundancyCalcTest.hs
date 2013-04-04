@@ -11,29 +11,32 @@ import Development.CSSCSS.RedundancyCalc
 main  = $(defaultMainGenerator)
 tests = $(testGroupGenerator)
 
+sel @/ decs = Ruleset sel decs
+property @: value = Declaration property value
+
 case_findMatches = do
   findMatches [
-    Ruleset ".foo" [Rule "display" "none", Rule "position" "relative"],
-    Ruleset ".bar" [Rule "position" "relative", Rule "display" "none"],
-    Ruleset ".baz" [Rule "position" "relative"]
-    ] 
+    ".foo"@/["display"@:"none", "position"@:"relative"],
+    ".bar"@/["position"@:"relative", "display"@:"none"],
+    ".baz"@/["position"@:"relative"]
+    ]
   @?=
-    [((0, Ruleset ".foo" [Rule "display" "none", Rule "position" "relative"]), [
-    Match 1 ".bar" [Rule "display" "none", Rule "position" "relative"],
-    Match 2 ".baz" [Rule "position" "relative"]]),
+    [((0, ".foo"@/["display"@:"none", "position"@:"relative"]), [
+    Match 1 ".bar" ["display"@:"none", "position"@:"relative"],
+    Match 2 ".baz" ["position"@:"relative"]]),
 
-                   ((1, Ruleset ".bar" [Rule "display" "none", Rule "position" "relative"]), [
-                   Match 0 ".foo" [Rule "display" "none", Rule "position" "relative"],
-                   Match 2 ".baz" [Rule "position" "relative"]]),
+                   ((1, ".bar"@/["display"@:"none", "position"@:"relative"]), [
+                   Match 0 ".foo" ["display"@:"none", "position"@:"relative"],
+                   Match 2 ".baz" ["position"@:"relative"]]),
 
-                   ((2, Ruleset ".baz" [Rule "position" "relative"]), [
-                   Match 0 ".foo" [Rule "position" "relative"],
-                   Match 1 ".bar" [Rule "position" "relative"]])
+                   ((2, ".baz"@/["position"@:"relative"]), [
+                   Match 0 ".foo" ["position"@:"relative"],
+                   Match 1 ".bar" ["position"@:"relative"]])
                    ]
 
 case_returnEmptyLists = do
   findMatches [
-    Ruleset ".foo" [Rule "display" "none", Rule "position" "relative"],
-    Ruleset ".bar" [Rule "display" "block"],
-    Ruleset ".baz" [Rule "position" "absolute"]
+    ".foo"@/["display"@:"none", "position"@:"relative"],
+    ".bar"@/["display"@:"block"],
+    ".baz"@/["position"@:"absolute"]
     ] @?= []

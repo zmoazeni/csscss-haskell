@@ -84,21 +84,21 @@ instance ShorthandProperty BorderWidths where
                                         WLength l -> pack (show l)
                                         _         -> toLower (pack (show value))
                              property = "border-" `append` side `append` "-width"
-                         in Rule property value'
+                         in Declaration property value'
 
 instance ShorthandProperty BorderStyles where
   getLonghandRules (BorderStyles t r b l) = zipSides style [t, r, b, l]
     where
       style side value = let value' = toLower (pack (show value))
                              property = "border-" `append` side `append` "-style"
-                         in Rule property value'
+                         in Declaration property value'
 
 instance ShorthandProperty BorderColors where
   getLonghandRules (BorderColors t r b l) = zipSides color' [t, r, b, l]
     where
       color' side value = let value' = pack (show value)
                               property = "border-" `append` side `append` "-color"
-                          in Rule property value'
+                          in Declaration property value'
 
 instance ShorthandProperty Border where
   getLonghandRules InheritBorder = []

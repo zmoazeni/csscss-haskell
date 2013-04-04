@@ -10,11 +10,11 @@ import Text.CSS.Shorthand
 
 data Match = Match {getMId       :: Integer,
                     getMSelector :: Text,
-                    getMRules    :: [Rule]}
+                    getMRules    :: [Declaration]}
            deriving (Show, Eq, Ord)
 
 data MatchResult = MatchResult {getMRSelectors :: [Text],
-                                getMRRules     :: [Rule]}
+                                getMRRules     :: [Declaration]}
                    deriving (Show, Eq, Ord)
 
 
@@ -32,7 +32,7 @@ findMatches rulesets = reduce $ map match indexedRulesets
 
     otherIndexedRulesets skipIndex = [ir | ir@(index, _) <- indexedRulesets, index /= skipIndex]
     indexedRulesets = zip [0..] (map sortRuleset rulesets)
-    sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getRules ruleset)
+    sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getDeclarations ruleset)
 
 matcher :: IndexedRuleset -> (IndexedRuleset, [Match]) -> (IndexedRuleset, [Match])
 matcher (index, ruleset) iRulesetCheck@(checkRuleset, matches) = if null sameRules
@@ -41,8 +41,8 @@ matcher (index, ruleset) iRulesetCheck@(checkRuleset, matches) = if null sameRul
 
   where
     sameRules = filter (`elem` rules) checkRules
-    rules = getRules ruleset
-    checkRules = getRules (snd checkRuleset)
+    rules = getDeclarations ruleset
+    checkRules = getDeclarations (snd checkRuleset)
     match = Match index (getSelector ruleset) sameRules
 
 groupMatches :: [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]

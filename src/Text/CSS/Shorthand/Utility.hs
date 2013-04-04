@@ -64,7 +64,7 @@ instance Value VerticalPoint
 instance Value LengthUnit
 
 class ShorthandProperty a where
-  getLonghandRules :: a -> [Rule]
+  getLonghandRules :: a -> [Declaration]
 
 lexeme :: Parser a -> Parser a
 lexeme p = p <* skipSpace
