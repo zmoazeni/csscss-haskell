@@ -4,63 +4,34 @@ module Development.CSSCSS.RedundancyCalc where
 
 import Data.Text (Text)
 import Data.List
+import Data.Map (fromListWith, toList)
 
 import Development.CSSCSS.Rulesets
-import Text.CSS.Shorthand
 
-data Match = Match {getMId       :: Integer,
-                    getMSelector :: Text,
-                    getMRules    :: [Declaration]}
-           deriving (Show, Eq, Ord)
-
-data MatchResult = MatchResult {getMRSelectors :: [Text],
-                                getMRRules     :: [Declaration]}
-                   deriving (Show, Eq, Ord)
-
-
-type IndexedRuleset = (Integer, Ruleset)
-
-findMatches :: [Ruleset] -> [(IndexedRuleset, [Match])]
-findMatches rulesets = reduce $ map match indexedRulesets
+findMatches :: [Ruleset] -> [([Text], [Declaration])]
+findMatches rs = let declarationMap   = fromListWith appendNub (concatMap decTuple rs)
+                     pairedMap        = fromListWith appendNub $ concatMap pairSelectors (toList declarationMap)
+                     combinedSeletors = weirdFold doDecsMatch combineSamePairs [] (toList pairedMap)
+                 in sortBy (\(_, decs1) (_, decs2) -> length decs2 `compare` length decs1) combinedSeletors
   where
-    reduce = nubBy indexes . foldr atLeastTwo []
-    indexes (_, ms1) (_, ms2) = sort (map getMId ms1) == sort (map getMId ms2)
-    atLeastTwo item@(_, rs) ms = if length rs > 1 then item:ms else ms
+    decTuple (Ruleset selector declarations) = map (\dec -> (dec, [selector])) declarations
+    pairSelectors (declaration, selectors)   = map (\pair -> (pair, [declaration])) $ pairs selectors
 
-    match ir@(index, _) = foldr matcher (ir, []) (otherIndexedRulesets index)
+    appendNub a b = nub (a ++ b)
+    doDecsMatch (_, decs1) (_, decs2) = decs1 == decs2
+    combineSamePairs (selectors, decs) passed list = (sort . nub $ (fromTuple selectors) ++ (concatMap (fromTuple . fst) passed), decs):list
+    fromTuple (a, b) = [a, b]
 
-
-    otherIndexedRulesets skipIndex = [ir | ir@(index, _) <- indexedRulesets, index /= skipIndex]
-    indexedRulesets = zip [0..] (map sortRuleset rulesets)
-    sortRuleset ruleset = Ruleset (getSelector ruleset) (sort $ getDeclarations ruleset)
-
-matcher :: IndexedRuleset -> (IndexedRuleset, [Match]) -> (IndexedRuleset, [Match])
-matcher (index, ruleset) iRulesetCheck@(checkRuleset, matches) = if null sameRules
-                                                                   then iRulesetCheck
-                                                                   else (checkRuleset, match:matches)
-
+pairs :: [a] -> [(a, a)]
+pairs = concat . pairs'
   where
-    sameRules = filter (`elem` rules) checkRules
-    rules = getDeclarations ruleset
-    checkRules = getDeclarations (snd checkRuleset)
-    match = Match index (getSelector ruleset) sameRules
+    pairs' []     = []
+    pairs' (x:[]) = []
+    pairs' (x:xs) = map (\y -> (x, y)) xs : pairs' xs
 
-groupMatches :: [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]
-groupMatches = concatMap pairEach
+weirdFold :: (a -> a -> Bool) -> (a -> [a] -> b -> b) -> b -> [a] -> b
+weirdFold predicate f initial list = go initial list
   where
-    pairEach (indexedRuleset, matches') = map (\match -> (indexedRuleset, match)) matches'
-
-
-nubMatches :: [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]
-nubMatches = nubBy nubber
-  where
-    nubber ((i1, _), Match m1 _ _) ((i2, _), Match m2 _ _) = i1 == m2 && m1 == i2
-
-reduceMatches :: Int -> [(IndexedRuleset, Match)] -> [(IndexedRuleset, Match)]
-reduceMatches num matches = sortBy matchTotal $ filter matchLength matches
-  where
-    matchLength (_, match) = length (getMRules match) >= num
-    matchTotal (_, m1) (_, m2) = length (getMRules m2) `compare` length (getMRules m1)
-
-compactMatches :: Int -> [(IndexedRuleset, [Match])] -> [(IndexedRuleset, Match)]
-compactMatches num pairs = reduceMatches num . nubMatches . groupMatches $ pairs
+    go z []     = z
+    go z (x:xs) = let (passList, failList) = partition (predicate x) xs
+                  in go (f x passList z) failList

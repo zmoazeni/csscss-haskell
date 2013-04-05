@@ -12,6 +12,12 @@ data Declaration = Declaration {getProperty :: Text, getValue :: Text}
 data Ruleset = Ruleset {getSelector :: Text, getDeclarations :: [Declaration]}
                  deriving (Show, Eq, Ord)
 
+(@/) :: Text -> [Declaration] -> Ruleset
+sel @/ decs = Ruleset sel decs
+
+(@:) :: Text -> Text -> Declaration
+property @: value = Declaration property value
+
 buildRulesets :: [RawRuleset] -> [Ruleset]
 buildRulesets = map buildRuleset
 
